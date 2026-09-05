@@ -30,6 +30,11 @@ class HOTASDebugController
 		}
 
 		m_InputBinding = m_InputManager.CreateUserBinding();
+
+#ifdef WORKBENCH
+		LoadWorkbenchTestConfig();
+#endif
+
 		BuildActionList();
 		CreateHud();
 		RegisterListeners();
@@ -54,6 +59,21 @@ class HOTASDebugController
 		m_InputManager = null;
 		m_bInitialized = false;
 	}
+
+#ifdef WORKBENCH
+	protected void LoadWorkbenchTestConfig()
+	{
+		if (!m_InputBinding)
+			return;
+
+		ref array<ResourceName> customConfigs = {};
+		ResourceName testConfig = "$profile:.save/settings/customInputConfigs/Solr1 v5.3.conf";
+		customConfigs.Insert(testConfig);
+		m_InputBinding.SetCustomConfigs(customConfigs);
+
+		Print(string.Format("[HOTAS Debugger] Workbench test config requested: %1", testConfig), LogLevel.NORMAL);
+	}
+#endif
 
 	protected void RegisterListeners()
 	{

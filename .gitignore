@@ -1,0 +1,8 @@
+# Arma Reforger Workbench generated/local files
+resourceDatabase.rdb
+
+# Common editor/OS files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

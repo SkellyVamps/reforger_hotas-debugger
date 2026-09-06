@@ -20,7 +20,10 @@ class HOTASDebugController
 	void Initialize()
 	{
 		if (m_bInitialized)
-			return;
+		{
+			Print("[HOTAS Debugger] Reinitializing for new play session", LogLevel.NORMAL);
+			Shutdown();
+		}
 
 		m_InputManager = GetGame().GetInputManager();
 		if (!m_InputManager)
@@ -45,11 +48,14 @@ class HOTASDebugController
 
 	void Shutdown()
 	{
-		if (!m_bInitialized || !m_InputManager)
+		if (!m_bInitialized)
 			return;
 
-		foreach (string actionName : m_WatchedActions)
-			m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+		if (m_InputManager)
+		{
+			foreach (string actionName : m_WatchedActions)
+				m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+		}
 
 		if (m_DebugText)
 			m_DebugText.RemoveFromHierarchy();

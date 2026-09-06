@@ -1,3 +1,87 @@
-FrameWidgetClass "{6A4C786ACABA4213}" {
+FrameWidgetClass {
  Name "rootFrame"
+ {
+  SizeLayoutWidgetClass "{6A4D196EA538DFFA}" {
+   Name "HudRoot"
+   Slot FrameWidgetSlot "{6A4D196EA538DF3D}" {
+    PositionX 610
+    OffsetLeft 610
+    PositionY 950
+    OffsetTop 950
+    SizeX 700
+    OffsetRight -1310
+    SizeY 70
+    OffsetBottom -1020
+    Alignment 0 0
+   }
+   {
+    OverlayWidgetClass "{6A4D196E51A9945F}" {
+     Name "Background"
+     Slot AlignableSlot "{6A4D196E51A99442}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      ImageWidgetClass "{6A4D196E6177C195}" {
+       Name "BackgroundImage"
+       Slot OverlayWidgetSlot "{6A4D196E6177C1BF}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Color 0.0052 0.007 0.0091 0.6
+       Size 1024 1024
+       Progress 0.23
+       Range 0.77
+      }
+      HorizontalLayoutWidgetClass "{6A4D196E0E339009}" {
+       Name "Content"
+       Slot OverlayWidgetSlot "{6A4D196E0E339032}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+        Padding 15 15 15 15
+       }
+       "Fill Origin" Center
+       {
+        RichTextWidgetClass "{6A4D196E34A930BA}" {
+         Name "InputText"
+         Slot LayoutSlot "{6A4D196E34A930DF}" {
+         }
+         Color 0.7605 0.3865 0.0802 1
+         Text "Lorum Ipsum"
+         "Font Size" 26
+         "Vertical Alignment" Center
+         FontProperties FontProperties "{6A4D196B77941036}" {
+          Bold 1
+         }
+        }
+        RichTextWidgetClass "{6A4D196E30991654}" {
+         Name "SeparatorText"
+         Slot LayoutSlot "{6A4D196E30991678}" {
+          Padding 5 0 5 0
+         }
+         Text "|"
+         "Font Size" 26
+         "Min Font Size" 26
+         "Vertical Alignment" Center
+         FontProperties FontProperties "{6A4D1968C74941C4}" {
+          Bold 1
+         }
+        }
+        RichTextWidgetClass "{6A4D196E2D715F43}" {
+         Name "ActionText"
+         Slot LayoutSlot "{6A4D196E2D715F64}" {
+          SizeMode Fill
+         }
+         Text "Landing Lights"
+         "Font Size" 26
+         "Min Font Size" 26
+         "Vertical Alignment" Center
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
 }

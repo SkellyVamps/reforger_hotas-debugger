@@ -73,7 +73,7 @@ class HOTASDebugController
 			return;
 
 		ref array<ResourceName> customConfigs = {};
-		ResourceName testConfig = "$profile:.save/settings/customInputConfigs/Solr1 v5.3.conf";
+		ResourceName testConfig = "$profile:.save/settings/customInputConfigs/Solr1 v5.4.conf";
 		customConfigs.Insert(testConfig);
 		m_InputBinding.SetCustomConfigs(customConfigs);
 		m_InputBinding.Save();

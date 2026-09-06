@@ -4,7 +4,7 @@ class HOTASDebugController
 
 	protected InputManager m_InputManager;
 	protected ref InputBinding m_InputBinding;
-	protected TextWidget m_DebugText;
+	protected RichTextWidget m_DebugText;
 	protected Widget m_HudBackground;
 	protected ref array<string> m_WatchedActions = {};
 	protected bool m_bInitialized;
@@ -139,16 +139,19 @@ class HOTASDebugController
 		}
 		else
 		{
-			// Leave extra horizontal room so longer readable action labels are not clipped.
-			width = Math.Round(1040 * m_fHudScale);
+			// Keep the HUD wide enough for readable labels, but always inside the current viewport.
+			int horizontalPadding = Math.Round(24 * m_fHudScale);
+			width = Math.Min(Math.Round(1360 * m_fHudScale), workspace.GetWidth() - horizontalPadding);
 			height = Math.Round(72 * m_fHudScale);
 			GetHudPosition(workspace, width, height, left, top);
 			flags |= WidgetFlags.CENTER | WidgetFlags.VCENTER;
 
 			if (m_bBackgroundEnabled)
 			{
+				// PanelWidget is only a container and does not draw a visible fill by itself.
+				// A full ProgressBar gives us a reliable colorable rectangle for the HUD backdrop.
 				m_HudBackground = workspace.CreateWidgetInWorkspace(
-					WidgetType.PanelWidgetTypeID,
+					WidgetType.ProgressBarWidgetTypeID,
 					left,
 					top,
 					width,
@@ -157,13 +160,20 @@ class HOTASDebugController
 					Color.FromInt(0xFF101418),
 					999
 				);
+				ProgressBarWidget backgroundBar = ProgressBarWidget.Cast(m_HudBackground);
+				if (backgroundBar)
+				{
+					backgroundBar.SetMin(0.0);
+					backgroundBar.SetMax(1.0);
+					backgroundBar.SetCurrent(1.0);
+				}
 				if (m_HudBackground)
 					m_HudBackground.SetOpacity(m_fBackgroundOpacity);
 			}
 		}
 
 		Widget widget = workspace.CreateWidgetInWorkspace(
-			WidgetType.TextWidgetTypeID,
+			WidgetType.RichTextWidgetTypeID,
 			left,
 			top,
 			width,
@@ -173,7 +183,7 @@ class HOTASDebugController
 			1000
 		);
 
-		m_DebugText = TextWidget.Cast(widget);
+		m_DebugText = RichTextWidget.Cast(widget);
 		if (!m_DebugText)
 		{
 			Print("[HOTAS Debugger] Could not create TextWidget", LogLevel.ERROR);
@@ -399,7 +409,7 @@ class HOTASDebugController
 		}
 		else
 		{
-			output = string.Format("%1   •   %2", MakeReadableBinding(bindingsText), readableAction);
+			output = string.Format("<color rgba="226,167,80,255">%1</color>   |   <color rgba="255,255,255,255">%2</color>", MakeReadableBinding(bindingsText), readableAction);
 		}
 
 		if (m_DebugText)

@@ -1,0 +1,38 @@
+name: Patch HUD Style and Background
+
+on:
+  push:
+    branches:
+      - fix/hud-style-and-background
+    paths:
+      - 'scripts/patch_hud_style_background.py'
+      - '.github/workflows/patch-hud-style-background.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/hud-style-and-background
+      - run: python scripts/patch_hud_style_background.py
+      - run: |
+          grep -q 'RichTextWidget m_DebugText' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q 'ProgressBarWidgetTypeID' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q '226,167,80,255' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q '   |   ' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q '1360 \* m_fHudScale' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Improve HUD styling and background"
+            git push origin HEAD:fix/hud-style-and-background
+          fi

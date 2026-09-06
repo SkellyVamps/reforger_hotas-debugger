@@ -583,7 +583,7 @@ class HOTASDebugController
 		}
 
 		if (joystickBindings.IsEmpty())
-			return "Action fired, but active joystick binding lookup returned nothing";
+			return "Non-Joystick Input";
 
 		return joystickBindings;
 	}

@@ -409,7 +409,7 @@ class HOTASDebugController
 		}
 		else
 		{
-			output = string.Format("<color rgba="226,167,80,255">%1</color>   |   <color rgba="255,255,255,255">%2</color>", MakeReadableBinding(bindingsText), readableAction);
+			output = string.Format("<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>", MakeReadableBinding(bindingsText), readableAction);
 		}
 
 		if (m_DebugText)

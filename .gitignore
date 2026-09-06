@@ -1,5 +1,7 @@
 # Arma Reforger Workbench generated/local files
 resourceDatabase.rdb
+Configs/
+UI/layouts/HUD/Notifications/
 
 # Common editor/OS files
 .vscode/

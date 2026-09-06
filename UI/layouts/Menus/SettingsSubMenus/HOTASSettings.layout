@@ -149,5 +149,96 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
     }
    }
   }
+  VerticalLayoutWidgetClass "{8C52D9F7A31B6500}" {
+   Name "HUDPreviewPane"
+   Slot LayoutSlot "{8C52D9F7A31B6501}" {
+    Padding 36 72 24 24
+    SizeMode Fill
+    FillWeight 1
+   }
+   {
+    VerticalLayoutWidgetClass "{8C52D9F7A31B6502}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
+     Name "TitleHUDPreview"
+     Slot LayoutSlot "{8C52D9F7A31B6503}" {
+     }
+     components {
+      SCR_LabelComponent "{58B30C1A8E56F0FF}" {
+       m_sLabel "HUD Position Preview"
+       m_fPaddingTop 4
+      }
+     }
+    }
+    FrameWidgetClass "{8C52D9F7A31B6504}" {
+     Name "HUDPreviewHost"
+     Slot LayoutSlot "{8C52D9F7A31B6505}" {
+      Padding 8 12 8 12
+      SizeMode Fill
+      FillWeight 1
+     }
+     {
+      FrameWidgetClass "{8C52D9F7A31B6506}" {
+       Name "HUDPreviewSquare"
+       Slot FrameWidgetSlot "{8C52D9F7A31B6507}" {
+        PositionX 0
+        PositionY 0
+        SizeX 400
+        SizeY 400
+        Alignment 0 0
+       }
+       {
+        ImageWidgetClass "{8C52D9F7A31B6508}" {
+         Name "HUDPreviewSquareBackground"
+         Slot FrameWidgetSlot "{8C52D9F7A31B6509}" {
+          PositionX 0
+          PositionY 0
+          SizeX 400
+          SizeY 400
+          Alignment 0 0
+         }
+         Color 0.08 0.08 0.08 0.72
+         Size 1024 1024
+        }
+        FrameWidgetClass "{8C52D9F7A31B6510}" {
+         Name "HUDScreenPreview"
+         Slot FrameWidgetSlot "{8C52D9F7A31B6511}" {
+          PositionX 20
+          PositionY 80
+          SizeX 360
+          SizeY 240
+          Alignment 0 0
+         }
+         {
+          ImageWidgetClass "{8C52D9F7A31B6512}" {
+           Name "HUDScreenPreviewBackground"
+           Slot FrameWidgetSlot "{8C52D9F7A31B6513}" {
+            PositionX 0
+            PositionY 0
+            SizeX 360
+            SizeY 240
+            Alignment 0 0
+           }
+           Color 0.012 0.016 0.021 1
+           Size 1024 1024
+          }
+          ImageWidgetClass "{8C52D9F7A31B6514}" {
+           Name "HUDPositionPreview"
+           Slot FrameWidgetSlot "{8C52D9F7A31B6515}" {
+            PositionX 120
+            PositionY 205
+            SizeX 120
+            SizeY 16
+            Alignment 0 0
+           }
+           Color 0.7605 0.3865 0.0802 1
+           Size 1024 1024
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
  }
 }

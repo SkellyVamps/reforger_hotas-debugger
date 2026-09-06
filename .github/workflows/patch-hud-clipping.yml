@@ -1,0 +1,33 @@
+name: Patch HUD Clipping
+
+on:
+  push:
+    branches:
+      - fix/hud-text-clipping
+    paths:
+      - 'scripts/patch_hud_clipping.py'
+      - '.github/workflows/patch-hud-clipping.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/hud-text-clipping
+      - run: python scripts/patch_hud_clipping.py
+      - run: grep -q '1040 \* m_fHudScale' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Prevent normal HUD text clipping"
+            git push origin HEAD:fix/hud-text-clipping
+          fi

@@ -63,9 +63,6 @@ class HOTASDebugController
 
 		m_InputBinding = m_InputManager.CreateUserBinding();
 
-#ifdef WORKBENCH
-		LoadWorkbenchTestConfig();
-#endif
 
 		BuildActionList();
 		LoadHudSettings();
@@ -86,7 +83,6 @@ class HOTASDebugController
 			foreach (string actionName : m_WatchedActions)
 				m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
 
-			m_InputManager.RemoveActionListener("HOTASSettingsToggle", EActionTrigger.DOWN, OnSettingsToggle);
 		}
 
 		GetGame().GetCallqueue().Remove(StartFade);
@@ -98,30 +94,12 @@ class HOTASDebugController
 		m_bInitialized = false;
 	}
 
-#ifdef WORKBENCH
-	protected void LoadWorkbenchTestConfig()
-	{
-		if (!m_InputBinding)
-			return;
-
-		ref array<ResourceName> customConfigs = {};
-		ResourceName testConfig = "$profile:.save/settings/customInputConfigs/Solr1 v5.4.conf";
-		customConfigs.Insert(testConfig);
-		m_InputBinding.SetCustomConfigs(customConfigs);
-		m_InputBinding.Save();
-
-		ref array<ResourceName> activeConfigs = {};
-		m_InputBinding.GetCustomConfigs(activeConfigs);
-		Print(string.Format("[HOTAS Debugger] Workbench test config requested: %1 | active custom configs=%2", testConfig, activeConfigs.Count()), LogLevel.NORMAL);
-	}
-#endif
 
 	protected void RegisterListeners()
 	{
 		foreach (string actionName : m_WatchedActions)
 			m_InputManager.AddActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
 
-		m_InputManager.AddActionListener("HOTASSettingsToggle", EActionTrigger.DOWN, OnSettingsToggle);
 	}
 
 	protected void DestroyHud()
@@ -155,18 +133,6 @@ class HOTASDebugController
 		CreateHud();
 	}
 
-	protected void OnSettingsToggle(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
-	{
-		MenuManager menuManager = GetGame().GetMenuManager();
-		if (!menuManager)
-			return;
-
-		MenuBase existing = menuManager.FindMenuByPreset(ChimeraMenuPreset.HOTASSettingsMenu);
-		if (existing)
-			menuManager.CloseMenu(existing);
-		else
-			menuManager.OpenMenu(ChimeraMenuPreset.HOTASSettingsMenu);
-	}
 
 	protected void CreateHud()
 	{
@@ -504,6 +470,12 @@ class HOTASDebugController
 		file.Close();
 	}
 
+
+	void ReloadHudSettings()
+	{
+		LoadHudSettings();
+	}
+
 	int GetSettingsCount()
 	{
 		return 12;
@@ -529,55 +501,6 @@ class HOTASDebugController
 		return "Unknown";
 	}
 
-	protected string GetAxisSettingValue(int rawAxis)
-	{
-		if (rawAxis < 0)
-			return "Disabled";
-		return string.Format("Axis %1", rawAxis + 1);
-	}
-
-	protected string GetHudPositionDisplayName()
-	{
-		switch (m_sHudPosition)
-		{
-			case "top_left": return "Top Left";
-			case "top_center": return "Top Center";
-			case "top_right": return "Top Right";
-			case "center_left": return "Center Left";
-			case "center": return "Center";
-			case "center_right": return "Center Right";
-			case "bottom_left": return "Bottom Left";
-			case "bottom_right": return "Bottom Right";
-		}
-		return "Bottom Center";
-	}
-
-	string GetSettingValue(int index)
-	{
-		switch (index)
-		{
-			case 0:
-				if (m_bHudEnabled) return "On";
-				return "Off";
-			case 1: return GetHudPositionDisplayName();
-			case 2: return string.Format("%1x", m_fHudScale.ToString(1));
-			case 3: return string.Format("%1 ms", m_iFadeDelayMs);
-			case 4: return string.Format("%1 ms", m_iFadeDurationMs);
-			case 5:
-				if (m_bBackgroundEnabled) return "On";
-				return "Off";
-			case 6: return string.Format("%1%", Math.Round(m_fBackgroundOpacity * 100));
-			case 7: return GetAxisSettingValue(m_iRollAxis);
-			case 8: return GetAxisSettingValue(m_iPitchAxis);
-			case 9: return GetAxisSettingValue(m_iThrottleAxis);
-			case 10: return GetAxisSettingValue(m_iYawAxis);
-			case 11:
-				if (m_bDebugMode) return "On";
-				return "Off";
-		}
-		return "";
-	}
-
 	protected int GetHudPositionIndex()
 	{
 		switch (m_sHudPosition)
@@ -597,11 +520,7 @@ class HOTASDebugController
 
 	protected void SetHudPositionIndex(int index)
 	{
-		while (index < 0)
-			index += 9;
-		while (index >= 9)
-			index -= 9;
-
+		index = Math.ClampInt(index, 0, 8);
 		switch (index)
 		{
 			case 0: m_sHudPosition = "top_left"; break;
@@ -616,55 +535,121 @@ class HOTASDebugController
 		}
 	}
 
-	void AdjustSetting(int index, int direction)
+	int GetSettingOptionCount(int index)
 	{
-		if (direction == 0)
-			direction = 1;
+		switch (index)
+		{
+			case 0: return 2;
+			case 1: return 9;
+			case 2: return 16;
+			case 3: return 101;
+			case 4: return 101;
+			case 5: return 2;
+			case 6: return 21;
+			case 7:
+			case 8:
+			case 9:
+			case 10: return 65;
+			case 11: return 2;
+		}
+		return 0;
+	}
 
+	int GetSettingOptionIndex(int index)
+	{
 		switch (index)
 		{
 			case 0:
-				m_bHudEnabled = !m_bHudEnabled;
-				break;
-			case 1:
-				SetHudPositionIndex(GetHudPositionIndex() + direction);
-				break;
-			case 2:
-				m_fHudScale = Math.Clamp(m_fHudScale + (0.1 * direction), 0.5, 2.0);
-				break;
-			case 3:
-				m_iFadeDelayMs = Math.ClampInt(m_iFadeDelayMs + (100 * direction), 0, 10000);
-				break;
-			case 4:
-				m_iFadeDurationMs = Math.ClampInt(m_iFadeDurationMs + (50 * direction), 0, 5000);
-				break;
+				if (m_bHudEnabled) return 1;
+				return 0;
+			case 1: return GetHudPositionIndex();
+			case 2: return Math.ClampInt(Math.Round((m_fHudScale - 0.5) * 10.0), 0, 15);
+			case 3: return Math.ClampInt(Math.Round(m_iFadeDelayMs / 100.0), 0, 100);
+			case 4: return Math.ClampInt(Math.Round(m_iFadeDurationMs / 50.0), 0, 100);
 			case 5:
-				m_bBackgroundEnabled = !m_bBackgroundEnabled;
-				break;
-			case 6:
-				m_fBackgroundOpacity = Math.Clamp(m_fBackgroundOpacity + (0.05 * direction), 0.0, 1.0);
-				break;
-			case 7:
-				m_iRollAxis = Math.ClampInt(m_iRollAxis + direction, -1, 63);
-				break;
-			case 8:
-				m_iPitchAxis = Math.ClampInt(m_iPitchAxis + direction, -1, 63);
-				break;
-			case 9:
-				m_iThrottleAxis = Math.ClampInt(m_iThrottleAxis + direction, -1, 63);
-				break;
-			case 10:
-				m_iYawAxis = Math.ClampInt(m_iYawAxis + direction, -1, 63);
-				break;
+				if (m_bBackgroundEnabled) return 1;
+				return 0;
+			case 6: return Math.ClampInt(Math.Round(m_fBackgroundOpacity * 20.0), 0, 20);
+			case 7: return Math.ClampInt(m_iRollAxis + 1, 0, 64);
+			case 8: return Math.ClampInt(m_iPitchAxis + 1, 0, 64);
+			case 9: return Math.ClampInt(m_iThrottleAxis + 1, 0, 64);
+			case 10: return Math.ClampInt(m_iYawAxis + 1, 0, 64);
 			case 11:
-				m_bDebugMode = !m_bDebugMode;
-				break;
-			default:
-				return;
+				if (m_bDebugMode) return 1;
+				return 0;
+		}
+		return 0;
+	}
+
+	protected string GetHudPositionOptionLabel(int index)
+	{
+		switch (index)
+		{
+			case 0: return "Top Left";
+			case 1: return "Top Center";
+			case 2: return "Top Right";
+			case 3: return "Center Left";
+			case 4: return "Center";
+			case 5: return "Center Right";
+			case 6: return "Bottom Left";
+			case 7: return "Bottom Center";
+			case 8: return "Bottom Right";
+		}
+		return "Bottom Center";
+	}
+
+	string GetSettingOptionLabel(int index, int optionIndex)
+	{
+		optionIndex = Math.ClampInt(optionIndex, 0, Math.Max(0, GetSettingOptionCount(index) - 1));
+		switch (index)
+		{
+			case 0:
+			case 5:
+			case 11:
+				if (optionIndex > 0) return "On";
+				return "Off";
+			case 1: return GetHudPositionOptionLabel(optionIndex);
+			case 2: return string.Format("%1x", (0.5 + optionIndex * 0.1).ToString(1));
+			case 3: return string.Format("%1 ms", optionIndex * 100);
+			case 4: return string.Format("%1 ms", optionIndex * 50);
+			case 6: return string.Format("%1%", optionIndex * 5);
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+				if (optionIndex == 0) return "Disabled";
+				return string.Format("Axis %1", optionIndex);
+		}
+		return "";
+	}
+
+	void SetSettingOptionIndex(int index, int optionIndex)
+	{
+		int count = GetSettingOptionCount(index);
+		if (count <= 0)
+			return;
+		optionIndex = Math.ClampInt(optionIndex, 0, count - 1);
+
+		switch (index)
+		{
+			case 0: m_bHudEnabled = optionIndex != 0; break;
+			case 1: SetHudPositionIndex(optionIndex); break;
+			case 2: m_fHudScale = 0.5 + optionIndex * 0.1; break;
+			case 3: m_iFadeDelayMs = optionIndex * 100; break;
+			case 4: m_iFadeDurationMs = optionIndex * 50; break;
+			case 5: m_bBackgroundEnabled = optionIndex != 0; break;
+			case 6: m_fBackgroundOpacity = optionIndex * 0.05; break;
+			case 7: m_iRollAxis = optionIndex - 1; break;
+			case 8: m_iPitchAxis = optionIndex - 1; break;
+			case 9: m_iThrottleAxis = optionIndex - 1; break;
+			case 10: m_iYawAxis = optionIndex - 1; break;
+			case 11: m_bDebugMode = optionIndex != 0; break;
+			default: return;
 		}
 
 		SaveHudSettings();
-		RebuildHud();
+		if (m_bInitialized)
+			RebuildHud();
 	}
 
 	protected void ShowHud()

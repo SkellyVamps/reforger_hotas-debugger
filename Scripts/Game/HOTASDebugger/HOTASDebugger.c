@@ -6,6 +6,11 @@ class HOTASDebugController
 	protected ref InputBinding m_InputBinding;
 	protected RichTextWidget m_DebugText;
 	protected Widget m_HudBackground;
+	protected Widget m_HudLayoutRoot;
+	protected RichTextWidget m_InputText;
+	protected RichTextWidget m_SeparatorText;
+	protected RichTextWidget m_ActionText;
+	protected bool m_bUsingLayoutHud;
 	protected ref array<string> m_WatchedActions = {};
 	protected bool m_bInitialized;
 	protected bool m_bDebugMode = false;
@@ -78,13 +83,23 @@ class HOTASDebugController
 		GetGame().GetCallqueue().Remove(StartFade);
 		GetGame().GetCallqueue().Remove(FadeStep);
 
-		if (m_DebugText)
-			m_DebugText.RemoveFromHierarchy();
-		if (m_HudBackground)
-			m_HudBackground.RemoveFromHierarchy();
+		if (m_HudLayoutRoot)
+			m_HudLayoutRoot.RemoveFromHierarchy();
+		else
+		{
+			if (m_DebugText)
+				m_DebugText.RemoveFromHierarchy();
+			if (m_HudBackground)
+				m_HudBackground.RemoveFromHierarchy();
+		}
 
 		m_DebugText = null;
 		m_HudBackground = null;
+		m_HudLayoutRoot = null;
+		m_InputText = null;
+		m_SeparatorText = null;
+		m_ActionText = null;
+		m_bUsingLayoutHud = false;
 		m_InputBinding = null;
 		m_InputManager = null;
 		m_bInitialized = false;
@@ -122,6 +137,11 @@ class HOTASDebugController
 			Print("[HOTAS Debugger] Workspace is not available", LogLevel.ERROR);
 			return;
 		}
+
+		// Normal mode prefers the Workbench-editable layout. Until the named widgets are
+		// added in Layout Editor, we safely fall back to the script-created HUD below.
+		if (!m_bDebugMode && TryCreateLayoutHud(workspace))
+			return;
 
 		int left;
 		int top;
@@ -210,6 +230,43 @@ class HOTASDebugController
 		}
 
 		m_DebugText.SetBold(true);
+	}
+
+	protected bool TryCreateLayoutHud(WorkspaceWidget workspace)
+	{
+		ResourceName hudLayout = "{25F3F1C1A41EA7E1}UI/layouts/HUD/HOTAS/HOTASInputHUD.layout";
+		m_HudLayoutRoot = workspace.CreateWidgets(hudLayout);
+		if (!m_HudLayoutRoot)
+		{
+			Print("[HOTAS Debugger] Could not load HOTASInputHUD.layout; using script HUD", LogLevel.WARNING);
+			return false;
+		}
+
+		m_InputText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("InputText"));
+		m_SeparatorText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("SeparatorText"));
+		m_ActionText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("ActionText"));
+		m_HudBackground = m_HudLayoutRoot.FindAnyWidget("Background");
+
+		if (!m_InputText || !m_SeparatorText || !m_ActionText)
+		{
+			Print("[HOTAS Debugger] HOTASInputHUD.layout is present but needs named RichText widgets: InputText, SeparatorText, ActionText. Using script HUD until the layout is ready.", LogLevel.WARNING);
+			m_HudLayoutRoot.RemoveFromHierarchy();
+			m_HudLayoutRoot = null;
+			m_InputText = null;
+			m_SeparatorText = null;
+			m_ActionText = null;
+			m_HudBackground = null;
+			return false;
+		}
+
+		m_bUsingLayoutHud = true;
+		m_SeparatorText.SetText("|");
+		m_HudLayoutRoot.SetOpacity(0.0);
+		if (m_HudBackground && !m_bBackgroundEnabled)
+			m_HudBackground.SetOpacity(0.0);
+
+		Print("[HOTAS Debugger] Using Workbench-editable HOTASInputHUD.layout", LogLevel.NORMAL);
+		return true;
 	}
 
 	protected void GetHudPosition(WorkspaceWidget workspace, int width, int height, out int left, out int top)
@@ -336,29 +393,49 @@ class HOTASDebugController
 
 	protected void ShowHud()
 	{
-		if (m_bDebugMode || !m_DebugText)
+		if (m_bDebugMode)
+			return;
+		if (m_bUsingLayoutHud && !m_HudLayoutRoot)
+			return;
+		if (!m_bUsingLayoutHud && !m_DebugText)
 			return;
 
 		ScriptCallQueue queue = GetGame().GetCallqueue();
 		queue.Remove(StartFade);
 		queue.Remove(FadeStep);
 		m_fFadeOpacity = 1.0;
-		m_DebugText.SetOpacity(1.0);
-		if (m_HudBackground)
-			m_HudBackground.SetOpacity(m_fBackgroundOpacity);
+
+		if (m_bUsingLayoutHud)
+			m_HudLayoutRoot.SetOpacity(1.0);
+		else
+		{
+			m_DebugText.SetOpacity(1.0);
+			if (m_HudBackground)
+				m_HudBackground.SetOpacity(m_fBackgroundOpacity);
+		}
+
 		queue.CallLater(StartFade, m_iFadeDelayMs, false);
 	}
 
 	protected void StartFade()
 	{
-		if (m_bDebugMode || !m_DebugText)
+		if (m_bDebugMode)
+			return;
+		if (m_bUsingLayoutHud && !m_HudLayoutRoot)
+			return;
+		if (!m_bUsingLayoutHud && !m_DebugText)
 			return;
 
 		if (m_iFadeDurationMs <= 0)
 		{
-			m_DebugText.SetOpacity(0.0);
-			if (m_HudBackground)
-				m_HudBackground.SetOpacity(0.0);
+			if (m_bUsingLayoutHud)
+				m_HudLayoutRoot.SetOpacity(0.0);
+			else
+			{
+				m_DebugText.SetOpacity(0.0);
+				if (m_HudBackground)
+					m_HudBackground.SetOpacity(0.0);
+			}
 			return;
 		}
 
@@ -368,7 +445,12 @@ class HOTASDebugController
 
 	protected void FadeStep()
 	{
-		if (!m_DebugText)
+		if (m_bUsingLayoutHud && !m_HudLayoutRoot)
+		{
+			GetGame().GetCallqueue().Remove(FadeStep);
+			return;
+		}
+		if (!m_bUsingLayoutHud && !m_DebugText)
 		{
 			GetGame().GetCallqueue().Remove(FadeStep);
 			return;
@@ -381,9 +463,14 @@ class HOTASDebugController
 			GetGame().GetCallqueue().Remove(FadeStep);
 		}
 
-		m_DebugText.SetOpacity(m_fFadeOpacity);
-		if (m_HudBackground)
-			m_HudBackground.SetOpacity(m_fBackgroundOpacity * m_fFadeOpacity);
+		if (m_bUsingLayoutHud)
+			m_HudLayoutRoot.SetOpacity(m_fFadeOpacity);
+		else
+		{
+			m_DebugText.SetOpacity(m_fFadeOpacity);
+			if (m_HudBackground)
+				m_HudBackground.SetOpacity(m_fBackgroundOpacity * m_fFadeOpacity);
+		}
 	}
 
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
@@ -395,10 +482,9 @@ class HOTASDebugController
 
 		string bindingsText = GetJoystickBindings(actionName);
 		string readableAction = MakeReadableActionName(actionName);
-		string output;
 		if (m_bDebugMode)
 		{
-			output = string.Format(
+			string output = string.Format(
 				"HOTAS INPUT DEBUG  #%1\nInput: %2\nAction: %3\nRaw action: %4\nValue: %5",
 				m_iEventCounter,
 				bindingsText,
@@ -406,14 +492,19 @@ class HOTASDebugController
 				actionName,
 				value.ToString(2)
 			);
+			if (m_DebugText)
+				m_DebugText.SetText(output);
 		}
-		else
+		else if (m_bUsingLayoutHud)
 		{
-			output = string.Format("<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>", MakeReadableBinding(bindingsText), readableAction);
+			m_InputText.SetText(MakeReadableBinding(bindingsText));
+			m_SeparatorText.SetText("|");
+			m_ActionText.SetText(readableAction);
+			ShowHud();
 		}
-
-		if (m_DebugText)
+		else if (m_DebugText)
 		{
+			string output = string.Format("<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>", MakeReadableBinding(bindingsText), readableAction);
 			m_DebugText.SetText(output);
 			ShowHud();
 		}

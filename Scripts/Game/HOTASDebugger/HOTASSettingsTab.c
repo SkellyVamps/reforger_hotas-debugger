@@ -10,6 +10,12 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	protected Widget m_ScreenPreview;
 	protected Widget m_ScreenPreviewBackground;
 	protected Widget m_HudPositionPreview;
+	protected ref HOTASHudPositionDragHandler m_HudDragHandler;
+	protected bool m_bDraggingHudPosition;
+	protected float m_fHudDragOffsetX;
+	protected float m_fHudDragOffsetY;
+	protected float m_fPreviewPositionX = 0.5;
+	protected float m_fPreviewPositionY = 0.95;
 
 	//------------------------------------------------------------------------------------------------
 	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
@@ -23,7 +29,9 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SetupHotasConfigSelector();
 		SetupHudControls();
 		SetupHudPositionPreview();
+		SyncHudPositionPreviewFromController();
 		m_bLoading = false;
+		GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 		GetGame().GetCallqueue().CallLater(UpdateHudPositionPreview, 0, false);
 	}
 
@@ -36,7 +44,9 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		HOTASDebugController.GetInstance().ReloadHudSettings();
 		SyncHotasConfigSelector();
 		SyncHudControls();
+		SyncHudPositionPreviewFromController();
 		m_bLoading = false;
+		GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 
 		GetGame().GetCallqueue().Remove(UpdateHudPositionPreview);
 		GetGame().GetCallqueue().CallLater(UpdateHudPositionPreview, 0, false);
@@ -47,6 +57,9 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	override void OnTabHide()
 	{
 		GetGame().GetCallqueue().Remove(UpdateHudPositionPreview);
+		GetGame().GetCallqueue().Remove(UpdateHudPositionDrag);
+		if (m_bDraggingHudPosition)
+			EndHudPositionDrag();
 		super.OnTabHide();
 	}
 
@@ -128,6 +141,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		}
 
 		m_HotasConfig.SetCurrentItem(selected, false, false, false);
+		RefreshSpinBoxArrows(m_HotasConfig, selected, m_UserConfigs.Count() + 1);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -149,6 +163,8 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			array<ResourceName> emptyConfigs = {};
 			binding.SetCustomConfigs(emptyConfigs);
 			binding.Save();
+			RefreshSpinBoxArrows(component, index, m_UserConfigs.Count() + 1);
+			GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 			Print("[HOTAS Debugger] Custom HOTAS input config cleared from Settings", LogLevel.NORMAL);
 			return;
 		}
@@ -159,6 +175,8 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 
 		string selectedConfig = m_UserConfigs.Get(configIndex);
 		keybindModule.SelectJoystickPresetPath(selectedConfig);
+		RefreshSpinBoxArrows(component, index, m_UserConfigs.Count() + 1);
+		GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 		Print(string.Format("[HOTAS Debugger] HOTAS input config selected from Settings: %1", selectedConfig), LogLevel.NORMAL);
 	}
 
@@ -172,6 +190,17 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		m_ScreenPreview = m_wRoot.FindAnyWidget("HUDScreenPreview");
 		m_ScreenPreviewBackground = m_wRoot.FindAnyWidget("HUDScreenPreviewBackground");
 		m_HudPositionPreview = m_wRoot.FindAnyWidget("HUDPositionPreview");
+
+		if (m_HudPositionPreview)
+		{
+			m_HudDragHandler = new HOTASHudPositionDragHandler(this);
+			m_HudPositionPreview.AddHandler(m_HudDragHandler);
+		}
+	}
+
+	protected void SyncHudPositionPreviewFromController()
+	{
+		HOTASDebugController.GetInstance().GetHudPositionNormalized(m_fPreviewPositionX, m_fPreviewPositionY);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -233,28 +262,14 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		FrameSlot.SetSize(m_ScreenPreviewBackground, previewWidth, previewHeight);
 
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
-		int positionIndex = controller.GetSettingOptionIndex(1);
-		float hudScale = 0.5 + controller.GetSettingOptionIndex(2) * 0.1;
+		float hudScale = 0.5 + controller.GetSettingOptionIndex(1) * 0.1;
 
 		float hudWidth = 700 * hudScale;
 		float hudHeight = 70 * hudScale;
-		float marginX = 48 * hudScale;
-		float marginY = 54 * hudScale;
-		float hudLeft = (screenWidth - hudWidth) * 0.5;
-		float hudTop = screenHeight - hudHeight - marginY;
-
-		switch (positionIndex)
-		{
-			case 0: hudLeft = marginX; hudTop = marginY; break;
-			case 1: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = marginY; break;
-			case 2: hudLeft = screenWidth - hudWidth - marginX; hudTop = marginY; break;
-			case 3: hudLeft = marginX; hudTop = (screenHeight - hudHeight) * 0.5; break;
-			case 4: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = (screenHeight - hudHeight) * 0.5; break;
-			case 5: hudLeft = screenWidth - hudWidth - marginX; hudTop = (screenHeight - hudHeight) * 0.5; break;
-			case 6: hudLeft = marginX; hudTop = screenHeight - hudHeight - marginY; break;
-			case 7: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = screenHeight - hudHeight - marginY; break;
-			case 8: hudLeft = screenWidth - hudWidth - marginX; hudTop = screenHeight - hudHeight - marginY; break;
-		}
+		float travelX = Math.Max(0.0, screenWidth - hudWidth);
+		float travelY = Math.Max(0.0, screenHeight - hudHeight);
+		float hudLeft = travelX * m_fPreviewPositionX;
+		float hudTop = travelY * m_fPreviewPositionY;
 
 		float previewHudWidth = previewWidth * (hudWidth / screenWidth);
 		float previewHudHeight = previewHeight * (hudHeight / screenHeight);
@@ -275,6 +290,129 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			m_HudPositionPreview.SetOpacity(0.9);
 	}
 
+
+	//------------------------------------------------------------------------------------------------
+	void BeginHudPositionDrag()
+	{
+		if (!m_HudPositionPreview || !m_ScreenPreview)
+			return;
+
+		int mouseX;
+		int mouseY;
+		WidgetManager.GetMousePos(mouseX, mouseY);
+
+		float boxX;
+		float boxY;
+		m_HudPositionPreview.GetScreenPos(boxX, boxY);
+		m_fHudDragOffsetX = mouseX - boxX;
+		m_fHudDragOffsetY = mouseY - boxY;
+
+		m_bDraggingHudPosition = true;
+		GetGame().GetCallqueue().Remove(UpdateHudPositionDrag);
+		GetGame().GetCallqueue().CallLater(UpdateHudPositionDrag, 16, true);
+		UpdateHudPositionDrag();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	void EndHudPositionDrag()
+	{
+		if (!m_bDraggingHudPosition)
+			return;
+
+		m_bDraggingHudPosition = false;
+		GetGame().GetCallqueue().Remove(UpdateHudPositionDrag);
+		HOTASDebugController.GetInstance().SetHudPositionNormalized(m_fPreviewPositionX, m_fPreviewPositionY);
+		UpdateHudPositionPreview();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void UpdateHudPositionDrag()
+	{
+		if (!m_bDraggingHudPosition || !m_HudPositionPreview || !m_ScreenPreview)
+			return;
+
+		int mouseX;
+		int mouseY;
+		WidgetManager.GetMousePos(mouseX, mouseY);
+
+		float screenX;
+		float screenY;
+		float screenWidth;
+		float screenHeight;
+		float boxWidth;
+		float boxHeight;
+		m_ScreenPreview.GetScreenPos(screenX, screenY);
+		m_ScreenPreview.GetScreenSize(screenWidth, screenHeight);
+		m_HudPositionPreview.GetScreenSize(boxWidth, boxHeight);
+
+		float travelX = screenWidth - boxWidth;
+		float travelY = screenHeight - boxHeight;
+		if (travelX <= 0 || travelY <= 0)
+			return;
+
+		m_fPreviewPositionX = Math.Clamp((mouseX - screenX - m_fHudDragOffsetX) / travelX, 0.0, 1.0);
+		m_fPreviewPositionY = Math.Clamp((mouseY - screenY - m_fHudDragOffsetY) / travelY, 0.0, 1.0);
+		UpdateHudPositionPreview();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void RefreshAllSpinBoxArrows()
+	{
+		if (m_HotasConfig)
+			RefreshSpinBoxArrows(m_HotasConfig, m_HotasConfig.GetCurrentIndex(), m_UserConfigs.Count() + 1);
+
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		for (int i = 0; i < m_HudControls.Count(); i++)
+		{
+			SCR_SpinBoxComponent control = m_HudControls[i];
+			if (!control)
+				continue;
+			RefreshSpinBoxArrows(control, control.GetCurrentIndex(), controller.GetSettingOptionCount(i));
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void RefreshSpinBoxArrows(SCR_SpinBoxComponent control, int selected, int optionCount)
+	{
+		if (!control || optionCount <= 0)
+			return;
+
+		Widget root = control.GetRootWidget();
+		if (!root)
+			return;
+
+		RefreshArrowButton(root.FindAnyWidget("ButtonLeft"), selected > 0);
+		RefreshArrowButton(root.FindAnyWidget("ButtonRight"), selected < optionCount - 1);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void RefreshArrowButton(Widget buttonWidget, bool enabled)
+	{
+		if (!buttonWidget)
+			return;
+
+		SCR_PagingButtonComponent button = SCR_PagingButtonComponent.Cast(buttonWidget.FindHandler(SCR_PagingButtonComponent));
+		if (button)
+		{
+			button.SetDisabledOpacity(0.35);
+			button.SetEnabled(enabled, false);
+		}
+		else
+		{
+			buttonWidget.SetEnabled(enabled);
+			if (enabled)
+				buttonWidget.SetOpacity(1.0);
+			else
+				buttonWidget.SetOpacity(0.35);
+		}
+
+		// SCR_PagingButtonComponent hides BackgroundImage when disabled. For settings
+		// selectors we want the normal disabled/grey arrow instead of a disappearing one.
+		Widget background = buttonWidget.FindAnyWidget("BackgroundImage");
+		if (background)
+			background.SetVisible(true);
+	}
+
 	//------------------------------------------------------------------------------------------------
 	protected void SetupHudControls()
 	{
@@ -282,7 +420,6 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 
 		array<string> widgetNames = {
 			"HUDEnabled",
-			"HUDPosition",
 			"HUDScale",
 			"FadeDelay",
 			"FadeDuration",
@@ -308,7 +445,9 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			for (int optionIndex = 0; optionIndex < optionCount; optionIndex++)
 				control.AddItem(controller.GetSettingOptionLabel(i, optionIndex), optionIndex == optionCount - 1);
 
-			control.SetCurrentItem(controller.GetSettingOptionIndex(i), false, false, false);
+			int currentIndex = controller.GetSettingOptionIndex(i);
+			control.SetCurrentItem(currentIndex, false, false, false);
+			RefreshSpinBoxArrows(control, currentIndex, optionCount);
 			control.m_OnChanged.Insert(OnHudSettingChanged);
 		}
 	}
@@ -321,7 +460,11 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		{
 			SCR_SpinBoxComponent control = m_HudControls[i];
 			if (control)
-				control.SetCurrentItem(controller.GetSettingOptionIndex(i), false, false, false);
+			{
+				int currentIndex = controller.GetSettingOptionIndex(i);
+				control.SetCurrentItem(currentIndex, false, false, false);
+				RefreshSpinBoxArrows(control, currentIndex, controller.GetSettingOptionCount(i));
+			}
 		}
 	}
 
@@ -336,10 +479,45 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			if (m_HudControls[i] != component)
 				continue;
 
-			HOTASDebugController.GetInstance().SetSettingOptionIndex(i, optionIndex);
+			HOTASDebugController controller = HOTASDebugController.GetInstance();
+			controller.SetSettingOptionIndex(i, optionIndex);
+			RefreshSpinBoxArrows(component, optionIndex, controller.GetSettingOptionCount(i));
+			GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 			UpdateHudPositionPreview();
 			return;
 		}
+	}
+}
+
+
+//------------------------------------------------------------------------------------------------
+// Mouse handler for the orange HUD preview bar. Keeping this separate prevents the
+// settings submenu's root handler from being rebound when the preview widget is hooked.
+class HOTASHudPositionDragHandler : ScriptedWidgetEventHandler
+{
+	protected HOTASSettingsSubMenu m_Owner;
+
+	void HOTASHudPositionDragHandler(HOTASSettingsSubMenu owner)
+	{
+		m_Owner = owner;
+	}
+
+	override bool OnMouseButtonDown(Widget w, int x, int y, int button)
+	{
+		if (button != 0 || !m_Owner)
+			return false;
+
+		m_Owner.BeginHudPositionDrag();
+		return true;
+	}
+
+	override bool OnMouseButtonUp(Widget w, int x, int y, int button)
+	{
+		if (button != 0 || !m_Owner)
+			return false;
+
+		m_Owner.EndHudPositionDrag();
+		return true;
 	}
 }
 

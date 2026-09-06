@@ -68,11 +68,6 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
        Slot LayoutSlot "{8C52D9F7A31B6421}" { Padding 4 4 4 4 }
        components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "HUD Enabled" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
       }
-      ButtonWidgetClass "{8C52D9F7A31B6422}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
-       Name "HUDPosition"
-       Slot LayoutSlot "{8C52D9F7A31B6423}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Position" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
-      }
       ButtonWidgetClass "{8C52D9F7A31B6424}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "HUDScale"
        Slot LayoutSlot "{8C52D9F7A31B6425}" { Padding 4 4 4 4 }
@@ -163,7 +158,7 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
      }
      components {
       SCR_LabelComponent "{58B30C1A8E56F0FF}" {
-       m_sLabel "HUD Position Preview"
+       m_sLabel "HUD Position - Drag Orange Bar"
        m_fPaddingTop 4
       }
      }

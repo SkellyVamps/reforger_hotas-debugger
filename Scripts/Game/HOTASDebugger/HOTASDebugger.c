@@ -139,7 +139,8 @@ class HOTASDebugController
 		}
 		else
 		{
-			width = Math.Round(760 * m_fHudScale);
+			// Leave extra horizontal room so longer readable action labels are not clipped.
+			width = Math.Round(1040 * m_fHudScale);
 			height = Math.Round(72 * m_fHudScale);
 			GetHudPosition(workspace, width, height, left, top);
 			flags |= WidgetFlags.CENTER | WidgetFlags.VCENTER;

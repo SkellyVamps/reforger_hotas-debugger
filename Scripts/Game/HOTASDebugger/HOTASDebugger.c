@@ -473,9 +473,57 @@ class HOTASDebugController
 		}
 	}
 
+	protected bool IsPlayerInAircraftOrTurret()
+	{
+		ChimeraCharacter character = ChimeraCharacter.Cast(SCR_PlayerController.GetLocalControlledEntity());
+		if (!character)
+			return false;
+
+		CompartmentAccessComponent compartmentAccess = character.GetCompartmentAccessComponent();
+		if (!compartmentAccess || !compartmentAccess.IsInCompartment())
+			return false;
+
+		BaseCompartmentSlot slot = compartmentAccess.GetCompartment();
+		if (!slot)
+			return false;
+
+		// Any turret seat is valid, whether it is vehicle-mounted or a static emplacement.
+		if (TurretCompartmentSlot.Cast(slot))
+			return true;
+
+		// Aircraft controls are only relevant from a pilot compartment.
+		if (!PilotCompartmentSlot.Cast(slot))
+			return false;
+
+		IEntity vehicle = compartmentAccess.GetVehicleCompartmentManagerOwner();
+		if (!vehicle)
+			vehicle = slot.GetOwner();
+		if (!vehicle)
+			return false;
+
+		// Vanilla helicopters expose a helicopter controller directly.
+		if (vehicle.FindComponent(HelicopterControllerComponent))
+			return true;
+
+		// Modded fixed-wing aircraft commonly use a pilot compartment with a custom
+		// controller. Exclude known ground-vehicle controllers so those seats do not
+		// activate the HOTAS HUD while still allowing custom aircraft implementations.
+		if (vehicle.FindComponent(SCR_CarControllerComponent))
+			return false;
+		if (vehicle.FindComponent(SCR_TrackedControllerComponent))
+			return false;
+
+		return true;
+	}
+
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
 	{
 		if (actionName.IsEmpty())
+			return;
+
+		// Ignore watched actions completely unless the local player is currently
+		// occupying an aircraft pilot seat or a turret seat.
+		if (!IsPlayerInAircraftOrTurret())
 			return;
 
 		m_iEventCounter++;

@@ -10,11 +10,11 @@ Normal mode uses readable input labels instead of raw Reforger binding strings. 
 
 ```text
 BUTTON 27   •   Next Weapon
-AXIS 1-     •   Cyclic Left
+ROLL -      •   Cyclic Left
 BUTTON 26   •   Missile Ripple
 ```
 
-Buttons and axes are shown as 1-based numbers for human readability.
+Buttons use 1-based numbers for human readability. Known flight axes can be given semantic labels such as `ROLL`, `PITCH`, `THROTTLE`, and `YAW`; unknown axes fall back to a numbered `AXIS` label.
 
 The HUD fades in immediately on input, stays visible for the configured delay, then fades smoothly. A dark background panel can be enabled or disabled.
 
@@ -35,7 +35,19 @@ fade_delay_ms=1800
 fade_duration_ms=350
 background=1
 background_opacity=0.55
+roll_axis=0
+pitch_axis=1
+throttle_axis=2
+yaw_axis=5
 ```
+
+The four `*_axis` values are the raw zero-based axis numbers reported by Reforger. Change them to match the user's HOTAS. For example, if another HOTAS reports roll on `axis3`, set:
+
+```text
+roll_axis=3
+```
+
+Set a control to `-1` if that semantic axis should not be assigned. Any raw axis that does not match one of these mappings remains displayed as `AXIS N` rather than being mislabeled.
 
 Supported positions:
 
@@ -52,6 +64,8 @@ bottom_right
 ```
 
 `scale` is clamped from `0.5` to `2.0`. `background_opacity` is clamped from `0.0` to `1.0`. Restart the play session after editing the file so the HUD reloads the settings.
+
+Existing `HOTASHudSettings.txt` files are not overwritten. If the file was created by an older version, add the four `*_axis` lines manually when custom axis mapping is needed; the built-in defaults remain roll `0`, pitch `1`, throttle `2`, and yaw `5`.
 
 ## Debug mode
 

@@ -70,8 +70,11 @@ class HOTASDebugController
 		ResourceName testConfig = "$profile:.save/settings/customInputConfigs/Solr1 v5.3.conf";
 		customConfigs.Insert(testConfig);
 		m_InputBinding.SetCustomConfigs(customConfigs);
+		m_InputBinding.Save();
 
-		Print(string.Format("[HOTAS Debugger] Workbench test config requested: %1", testConfig), LogLevel.NORMAL);
+		ref array<ResourceName> activeConfigs = {};
+		m_InputBinding.GetCustomConfigs(activeConfigs);
+		Print(string.Format("[HOTAS Debugger] Workbench test config requested: %1 | active custom configs=%2", testConfig, activeConfigs.Count()), LogLevel.NORMAL);
 	}
 #endif
 
@@ -145,7 +148,7 @@ class HOTASDebugController
 			return "Binding API unavailable";
 
 		ref array<string> bindings = {};
-		bool found = m_InputBinding.GetBindings(actionName, bindings, EInputDeviceType.INVALID, string.Empty, false);
+		bool found = m_InputBinding.GetBindings(actionName, bindings, EInputDeviceType.JOYSTICK, string.Empty, false);
 		if (!found || bindings.IsEmpty())
 			return "No binding reported";
 

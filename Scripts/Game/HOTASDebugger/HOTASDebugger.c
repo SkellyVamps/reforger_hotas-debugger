@@ -108,252 +108,252 @@ class HOTASDebugController
 			m_InputManager.AddActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
 	}
 
-\tprotected void CreateHud()
-\t{
-\t\tWorkspaceWidget workspace = GetGame().GetWorkspace();
-\t\tif (!workspace)
-\t\t{
-\t\t\tPrint("[HOTAS Debugger] Workspace is not available", LogLevel.ERROR);
-\t\t\treturn;
-\t\t}
+	protected void CreateHud()
+	{
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (!workspace)
+		{
+			Print("[HOTAS Debugger] Workspace is not available", LogLevel.ERROR);
+			return;
+		}
 
-\t\tint left;
-\t\tint top;
-\t\tint width;
-\t\tint height;
-\t\tint flags = WidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS | WidgetFlags.NO_LOCALIZATION;
+		int left;
+		int top;
+		int width;
+		int height;
+		int flags = WidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS | WidgetFlags.NO_LOCALIZATION;
 
-\t\tif (m_bDebugMode)
-\t\t{
-\t\t\tleft = 40;
-\t\t\ttop = 120;
-\t\t\twidth = 900;
-\t\t\theight = 180;
-\t\t\tflags |= WidgetFlags.WRAP_TEXT;
-\t\t}
-\t\telse
-\t\t{
-\t\t\twidth = Math.Round(760 * m_fHudScale);
-\t\t\theight = Math.Round(72 * m_fHudScale);
-\t\t\tGetHudPosition(workspace, width, height, left, top);
-\t\t\tflags |= WidgetFlags.CENTER | WidgetFlags.VCENTER;
+		if (m_bDebugMode)
+		{
+			left = 40;
+			top = 120;
+			width = 900;
+			height = 180;
+			flags |= WidgetFlags.WRAP_TEXT;
+		}
+		else
+		{
+			width = Math.Round(760 * m_fHudScale);
+			height = Math.Round(72 * m_fHudScale);
+			GetHudPosition(workspace, width, height, left, top);
+			flags |= WidgetFlags.CENTER | WidgetFlags.VCENTER;
 
-\t\t\tif (m_bBackgroundEnabled)
-\t\t\t{
-\t\t\t\tm_HudBackground = workspace.CreateWidgetInWorkspace(
-\t\t\t\t\tWidgetType.PanelWidgetTypeID,
-\t\t\t\t\tleft,
-\t\t\t\t\ttop,
-\t\t\t\t\twidth,
-\t\t\t\t\theight,
-\t\t\t\t\tWidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS,
-\t\t\t\t\tColor.FromInt(0xFF101418),
-\t\t\t\t\t999
-\t\t\t\t);
-\t\t\t\tif (m_HudBackground)
-\t\t\t\t\tm_HudBackground.SetOpacity(m_fBackgroundOpacity);
-\t\t\t}
-\t\t}
+			if (m_bBackgroundEnabled)
+			{
+				m_HudBackground = workspace.CreateWidgetInWorkspace(
+					WidgetType.PanelWidgetTypeID,
+					left,
+					top,
+					width,
+					height,
+					WidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS,
+					Color.FromInt(0xFF101418),
+					999
+				);
+				if (m_HudBackground)
+					m_HudBackground.SetOpacity(m_fBackgroundOpacity);
+			}
+		}
 
-\t\tWidget widget = workspace.CreateWidgetInWorkspace(
-\t\t\tWidgetType.TextWidgetTypeID,
-\t\t\tleft,
-\t\t\ttop,
-\t\t\twidth,
-\t\t\theight,
-\t\t\tflags,
-\t\t\tColor.White,
-\t\t\t1000
-\t\t);
+		Widget widget = workspace.CreateWidgetInWorkspace(
+			WidgetType.TextWidgetTypeID,
+			left,
+			top,
+			width,
+			height,
+			flags,
+			Color.White,
+			1000
+		);
 
-\t\tm_DebugText = TextWidget.Cast(widget);
-\t\tif (!m_DebugText)
-\t\t{
-\t\t\tPrint("[HOTAS Debugger] Could not create TextWidget", LogLevel.ERROR);
-\t\t\treturn;
-\t\t}
+		m_DebugText = TextWidget.Cast(widget);
+		if (!m_DebugText)
+		{
+			Print("[HOTAS Debugger] Could not create TextWidget", LogLevel.ERROR);
+			return;
+		}
 
-\t\tif (m_bDebugMode)
-\t\t{
-\t\t\tm_DebugText.SetExactFontSize(24);
-\t\t\tm_DebugText.SetOutline(2, 0xFF000000);
-\t\t\tm_DebugText.SetTextWrapping(true);
-\t\t\tm_DebugText.SetText("HOTAS INPUT DEBUG\\nWaiting for a watched input action...");
-\t\t}
-\t\telse
-\t\t{
-\t\t\tm_DebugText.SetExactFontSize(Math.Round(26 * m_fHudScale));
-\t\t\tm_DebugText.SetOutline(Math.Max(1, Math.Round(2 * m_fHudScale)), 0xF0000000);
-\t\t\tm_DebugText.SetShadow(Math.Max(1, Math.Round(2 * m_fHudScale)), 0xC0000000, 1.0, 2, 2);
-\t\t\tm_DebugText.SetTextWrapping(false);
-\t\t\tm_DebugText.SetText("");
-\t\t\tm_DebugText.SetOpacity(0.0);
-\t\t\tif (m_HudBackground)
-\t\t\t\tm_HudBackground.SetOpacity(0.0);
-\t\t}
+		if (m_bDebugMode)
+		{
+			m_DebugText.SetExactFontSize(24);
+			m_DebugText.SetOutline(2, 0xFF000000);
+			m_DebugText.SetTextWrapping(true);
+			m_DebugText.SetText("HOTAS INPUT DEBUG\nWaiting for a watched input action...");
+		}
+		else
+		{
+			m_DebugText.SetExactFontSize(Math.Round(26 * m_fHudScale));
+			m_DebugText.SetOutline(Math.Max(1, Math.Round(2 * m_fHudScale)), 0xF0000000);
+			m_DebugText.SetShadow(Math.Max(1, Math.Round(2 * m_fHudScale)), 0xC0000000, 1.0, 2, 2);
+			m_DebugText.SetTextWrapping(false);
+			m_DebugText.SetText("");
+			m_DebugText.SetOpacity(0.0);
+			if (m_HudBackground)
+				m_HudBackground.SetOpacity(0.0);
+		}
 
-\t\tm_DebugText.SetBold(true);
-\t}
+		m_DebugText.SetBold(true);
+	}
 
-\tprotected void GetHudPosition(WorkspaceWidget workspace, int width, int height, out int left, out int top)
-\t{
-\t\tint marginX = Math.Round(48 * m_fHudScale);
-\t\tint marginY = Math.Round(54 * m_fHudScale);
-\t\tint screenWidth = workspace.GetWidth();
-\t\tint screenHeight = workspace.GetHeight();
+	protected void GetHudPosition(WorkspaceWidget workspace, int width, int height, out int left, out int top)
+	{
+		int marginX = Math.Round(48 * m_fHudScale);
+		int marginY = Math.Round(54 * m_fHudScale);
+		int screenWidth = workspace.GetWidth();
+		int screenHeight = workspace.GetHeight();
 
-\t\tleft = (screenWidth - width) / 2;
-\t\ttop = screenHeight - height - marginY;
+		left = (screenWidth - width) / 2;
+		top = screenHeight - height - marginY;
 
-\t\tif (m_sHudPosition == "top_left")
-\t\t{
-\t\t\tleft = marginX;
-\t\t\ttop = marginY;
-\t\t}
-\t\telse if (m_sHudPosition == "top_center")
-\t\t{
-\t\t\tleft = (screenWidth - width) / 2;
-\t\t\ttop = marginY;
-\t\t}
-\t\telse if (m_sHudPosition == "top_right")
-\t\t{
-\t\t\tleft = screenWidth - width - marginX;
-\t\t\ttop = marginY;
-\t\t}
-\t\telse if (m_sHudPosition == "center_left")
-\t\t{
-\t\t\tleft = marginX;
-\t\t\ttop = (screenHeight - height) / 2;
-\t\t}
-\t\telse if (m_sHudPosition == "center")
-\t\t{
-\t\t\tleft = (screenWidth - width) / 2;
-\t\t\ttop = (screenHeight - height) / 2;
-\t\t}
-\t\telse if (m_sHudPosition == "center_right")
-\t\t{
-\t\t\tleft = screenWidth - width - marginX;
-\t\t\ttop = (screenHeight - height) / 2;
-\t\t}
-\t\telse if (m_sHudPosition == "bottom_left")
-\t\t{
-\t\t\tleft = marginX;
-\t\t\ttop = screenHeight - height - marginY;
-\t\t}
-\t\telse if (m_sHudPosition == "bottom_right")
-\t\t{
-\t\t\tleft = screenWidth - width - marginX;
-\t\t\ttop = screenHeight - height - marginY;
-\t\t}
-\t}
+		if (m_sHudPosition == "top_left")
+		{
+			left = marginX;
+			top = marginY;
+		}
+		else if (m_sHudPosition == "top_center")
+		{
+			left = (screenWidth - width) / 2;
+			top = marginY;
+		}
+		else if (m_sHudPosition == "top_right")
+		{
+			left = screenWidth - width - marginX;
+			top = marginY;
+		}
+		else if (m_sHudPosition == "center_left")
+		{
+			left = marginX;
+			top = (screenHeight - height) / 2;
+		}
+		else if (m_sHudPosition == "center")
+		{
+			left = (screenWidth - width) / 2;
+			top = (screenHeight - height) / 2;
+		}
+		else if (m_sHudPosition == "center_right")
+		{
+			left = screenWidth - width - marginX;
+			top = (screenHeight - height) / 2;
+		}
+		else if (m_sHudPosition == "bottom_left")
+		{
+			left = marginX;
+			top = screenHeight - height - marginY;
+		}
+		else if (m_sHudPosition == "bottom_right")
+		{
+			left = screenWidth - width - marginX;
+			top = screenHeight - height - marginY;
+		}
+	}
 
-\tprotected void LoadHudSettings()
-\t{
-\t\tstring settingsPath = "$profile:HOTASHudSettings.txt";
-\t\tif (!FileIO.FileExists(settingsPath))
-\t\t{
-\t\t\tFileHandle defaults = FileIO.OpenFile(settingsPath, FileMode.WRITE);
-\t\t\tif (defaults)
-\t\t\t{
-\t\t\t\tdefaults.WriteLine("# HOTAS Input HUD settings");
-\t\t\t\tdefaults.WriteLine("# position: top_left, top_center, top_right, center_left, center, center_right, bottom_left, bottom_center, bottom_right");
-\t\t\t\tdefaults.WriteLine("position=bottom_center");
-\t\t\t\tdefaults.WriteLine("scale=1.0");
-\t\t\t\tdefaults.WriteLine("fade_delay_ms=1800");
-\t\t\t\tdefaults.WriteLine("fade_duration_ms=350");
-\t\t\t\tdefaults.WriteLine("background=1");
-\t\t\t\tdefaults.WriteLine("background_opacity=0.55");
-\t\t\t\tdefaults.Close();
-\t\t\t}
-\t\t}
+	protected void LoadHudSettings()
+	{
+		string settingsPath = "$profile:HOTASHudSettings.txt";
+		if (!FileIO.FileExists(settingsPath))
+		{
+			FileHandle defaults = FileIO.OpenFile(settingsPath, FileMode.WRITE);
+			if (defaults)
+			{
+				defaults.WriteLine("# HOTAS Input HUD settings");
+				defaults.WriteLine("# position: top_left, top_center, top_right, center_left, center, center_right, bottom_left, bottom_center, bottom_right");
+				defaults.WriteLine("position=bottom_center");
+				defaults.WriteLine("scale=1.0");
+				defaults.WriteLine("fade_delay_ms=1800");
+				defaults.WriteLine("fade_duration_ms=350");
+				defaults.WriteLine("background=1");
+				defaults.WriteLine("background_opacity=0.55");
+				defaults.Close();
+			}
+		}
 
-\t\tFileHandle file = FileIO.OpenFile(settingsPath, FileMode.READ);
-\t\tif (!file)
-\t\t\treturn;
+		FileHandle file = FileIO.OpenFile(settingsPath, FileMode.READ);
+		if (!file)
+			return;
 
-\t\tstring line;
-\t\twhile (file.ReadLine(line) >= 0)
-\t\t{
-\t\t\tline = line.Trim();
-\t\t\tif (line.IsEmpty() || line.StartsWith("#"))
-\t\t\t\tcontinue;
+		string line;
+		while (file.ReadLine(line) >= 0)
+		{
+			line = line.Trim();
+			if (line.IsEmpty() || line.StartsWith("#"))
+				continue;
 
-\t\t\tref array<string> parts = {};
-\t\t\tline.Split("=", parts, false);
-\t\t\tif (parts.Count() < 2)
-\t\t\t\tcontinue;
+			ref array<string> parts = {};
+			line.Split("=", parts, false);
+			if (parts.Count() < 2)
+				continue;
 
-\t\t\tstring key = parts[0].Trim();
-\t\t\tstring value = parts[1].Trim();
-\t\t\tif (key == "position")
-\t\t\t\tm_sHudPosition = value;
-\t\t\telse if (key == "scale")
-\t\t\t\tm_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.5, 2.0);
-\t\t\telse if (key == "fade_delay_ms")
-\t\t\t\tm_iFadeDelayMs = Math.ClampInt(value.ToInt(1800), 0, 10000);
-\t\t\telse if (key == "fade_duration_ms")
-\t\t\t\tm_iFadeDurationMs = Math.ClampInt(value.ToInt(350), 0, 5000);
-\t\t\telse if (key == "background")
-\t\t\t\tm_bBackgroundEnabled = value.ToInt(1) != 0;
-\t\t\telse if (key == "background_opacity")
-\t\t\t\tm_fBackgroundOpacity = Math.Clamp(value.ToFloat(0.55), 0.0, 1.0);
-\t\t}
-\t\tfile.Close();
+			string key = parts[0].Trim();
+			string value = parts[1].Trim();
+			if (key == "position")
+				m_sHudPosition = value;
+			else if (key == "scale")
+				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.5, 2.0);
+			else if (key == "fade_delay_ms")
+				m_iFadeDelayMs = Math.ClampInt(value.ToInt(1800), 0, 10000);
+			else if (key == "fade_duration_ms")
+				m_iFadeDurationMs = Math.ClampInt(value.ToInt(350), 0, 5000);
+			else if (key == "background")
+				m_bBackgroundEnabled = value.ToInt(1) != 0;
+			else if (key == "background_opacity")
+				m_fBackgroundOpacity = Math.Clamp(value.ToFloat(0.55), 0.0, 1.0);
+		}
+		file.Close();
 
-\t\tPrint(string.Format("[HOTAS Debugger] HUD settings: position=%1 scale=%2 fade=%3/%4 background=%5 opacity=%6", m_sHudPosition, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
-\t}
+		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1 scale=%2 fade=%3/%4 background=%5 opacity=%6", m_sHudPosition, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
+	}
 
-\tprotected void ShowHud()
-\t{
-\t\tif (m_bDebugMode || !m_DebugText)
-\t\t\treturn;
+	protected void ShowHud()
+	{
+		if (m_bDebugMode || !m_DebugText)
+			return;
 
-\t\tScriptCallQueue queue = GetGame().GetCallqueue();
-\t\tqueue.Remove(StartFade);
-\t\tqueue.Remove(FadeStep);
-\t\tm_fFadeOpacity = 1.0;
-\t\tm_DebugText.SetOpacity(1.0);
-\t\tif (m_HudBackground)
-\t\t\tm_HudBackground.SetOpacity(m_fBackgroundOpacity);
-\t\tqueue.CallLater(StartFade, m_iFadeDelayMs, false);
-\t}
+		ScriptCallQueue queue = GetGame().GetCallqueue();
+		queue.Remove(StartFade);
+		queue.Remove(FadeStep);
+		m_fFadeOpacity = 1.0;
+		m_DebugText.SetOpacity(1.0);
+		if (m_HudBackground)
+			m_HudBackground.SetOpacity(m_fBackgroundOpacity);
+		queue.CallLater(StartFade, m_iFadeDelayMs, false);
+	}
 
-\tprotected void StartFade()
-\t{
-\t\tif (m_bDebugMode || !m_DebugText)
-\t\t\treturn;
+	protected void StartFade()
+	{
+		if (m_bDebugMode || !m_DebugText)
+			return;
 
-\t\tif (m_iFadeDurationMs <= 0)
-\t\t{
-\t\t\tm_DebugText.SetOpacity(0.0);
-\t\t\tif (m_HudBackground)
-\t\t\t\tm_HudBackground.SetOpacity(0.0);
-\t\t\treturn;
-\t\t}
+		if (m_iFadeDurationMs <= 0)
+		{
+			m_DebugText.SetOpacity(0.0);
+			if (m_HudBackground)
+				m_HudBackground.SetOpacity(0.0);
+			return;
+		}
 
-\t\tm_fFadeOpacity = 1.0;
-\t\tGetGame().GetCallqueue().CallLater(FadeStep, 50, true);
-\t}
+		m_fFadeOpacity = 1.0;
+		GetGame().GetCallqueue().CallLater(FadeStep, 50, true);
+	}
 
-\tprotected void FadeStep()
-\t{
-\t\tif (!m_DebugText)
-\t\t{
-\t\t\tGetGame().GetCallqueue().Remove(FadeStep);
-\t\t\treturn;
-\t\t}
+	protected void FadeStep()
+	{
+		if (!m_DebugText)
+		{
+			GetGame().GetCallqueue().Remove(FadeStep);
+			return;
+		}
 
-\t\tm_fFadeOpacity -= 50.0 / m_iFadeDurationMs;
-\t\tif (m_fFadeOpacity <= 0.0)
-\t\t{
-\t\t\tm_fFadeOpacity = 0.0;
-\t\t\tGetGame().GetCallqueue().Remove(FadeStep);
-\t\t}
+		m_fFadeOpacity -= 50.0 / m_iFadeDurationMs;
+		if (m_fFadeOpacity <= 0.0)
+		{
+			m_fFadeOpacity = 0.0;
+			GetGame().GetCallqueue().Remove(FadeStep);
+		}
 
-\t\tm_DebugText.SetOpacity(m_fFadeOpacity);
-\t\tif (m_HudBackground)
-\t\t\tm_HudBackground.SetOpacity(m_fBackgroundOpacity * m_fFadeOpacity);
-\t}
+		m_DebugText.SetOpacity(m_fFadeOpacity);
+		if (m_HudBackground)
+			m_HudBackground.SetOpacity(m_fBackgroundOpacity * m_fFadeOpacity);
+	}
 
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
 	{
@@ -466,98 +466,98 @@ class HOTASDebugController
 		return joystickBindings;
 	}
 
-\tprotected string MakeReadableBinding(string bindingsText)
-\t{
-\t\tref array<string> bindings = {};
-\t\tbindingsText.Split(" / ", bindings, true);
-\t\tstring result;
+	protected string MakeReadableBinding(string bindingsText)
+	{
+		ref array<string> bindings = {};
+		bindingsText.Split(" / ", bindings, true);
+		string result;
 
-\t\tforeach (string binding : bindings)
-\t\t{
-\t\t\tstring readable = binding;
-\t\t\tint buttonPos = binding.IndexOf(":button");
-\t\t\tint axisPos = binding.IndexOf(":axis");
-\t\t\tif (buttonPos >= 0)
-\t\t\t{
-\t\t\t\tint number = binding.Substring(buttonPos + 7, binding.Length() - buttonPos - 7).ToInt() + 1;
-\t\t\t\treadable = string.Format("BUTTON %1", number);
-\t\t\t}
-\t\t\telse if (axisPos >= 0)
-\t\t\t{
-\t\t\t\tstring axisText = binding.Substring(axisPos + 5, binding.Length() - axisPos - 5);
-\t\t\t\tstring direction;
-\t\t\t\tif (axisText.EndsWith("+"))
-\t\t\t\t\tdirection = "+";
-\t\t\t\telse if (axisText.EndsWith("-"))
-\t\t\t\t\tdirection = "-";
-\t\t\t\tint axisNumber = axisText.ToInt() + 1;
-\t\t\t\treadable = string.Format("AXIS %1%2", axisNumber, direction);
-\t\t\t}
+		foreach (string binding : bindings)
+		{
+			string readable = binding;
+			int buttonPos = binding.IndexOf(":button");
+			int axisPos = binding.IndexOf(":axis");
+			if (buttonPos >= 0)
+			{
+				int number = binding.Substring(buttonPos + 7, binding.Length() - buttonPos - 7).ToInt() + 1;
+				readable = string.Format("BUTTON %1", number);
+			}
+			else if (axisPos >= 0)
+			{
+				string axisText = binding.Substring(axisPos + 5, binding.Length() - axisPos - 5);
+				string direction;
+				if (axisText.EndsWith("+"))
+					direction = "+";
+				else if (axisText.EndsWith("-"))
+					direction = "-";
+				int axisNumber = axisText.ToInt() + 1;
+				readable = string.Format("AXIS %1%2", axisNumber, direction);
+			}
 
-\t\t\tif (!result.IsEmpty())
-\t\t\t\tresult += " / ";
-\t\t\tresult += readable;
-\t\t}
+			if (!result.IsEmpty())
+				result += " / ";
+			result += readable;
+		}
 
-\t\treturn result;
-\t}
+		return result;
+	}
 
-\tprotected string MakeReadableActionName(string actionName)
-\t{
-\t\tswitch (actionName)
-\t\t{
-\t\t\tcase "CharacterNextWeapon": return "Next Weapon";
-\t\t\tcase "TurretNextWeapon": return "Next Weapon";
-\t\t\tcase "TurretWeaponNextRippleQuantity": return "Missile Ripple";
-\t\t\tcase "TurretWeaponNextFireMode": return "Next Fire Mode";
-\t\t\tcase "TurretReload": return "Reload";
-\t\t\tcase "TurretFire": return "Fire";
-\t\t\tcase "HelicopterCyclicForward": return "Cyclic Forward";
-\t\t\tcase "HelicopterCyclicBack": return "Cyclic Back";
-\t\t\tcase "HelicopterCyclicLeft": return "Cyclic Left";
-\t\t\tcase "HelicopterCyclicRight": return "Cyclic Right";
-\t\t\tcase "HelicopterAntiTorqueLeft": return "Pedal Left";
-\t\t\tcase "HelicopterAntiTorqueRight": return "Pedal Right";
-\t\t\tcase "HelicopterCollectiveIncrease": return "Collective Up";
-\t\t\tcase "HelicopterCollectiveDecrease": return "Collective Down";
-\t\t\tcase "HelicopterWheelBrake": return "Wheel Brake";
-\t\t\tcase "HelicopterWheelBrakePersistent": return "Parking Brake";
-\t\t\tcase "HelicopterAutohoverToggle": return "Auto Hover";
-\t\t\tcase "HelicopterLightsTaxiToggle": return "Taxi Lights";
-\t\t\tcase "HelicopterLightsLandingToggle": return "Landing Lights";
-\t\t\tcase "HelicopterEngineStart": return "Engine Start";
-\t\t\tcase "HelicopterEngineStop": return "Engine Stop";
-\t\t\tcase "HelicopterFire": return "Fire";
-\t\t\tcase "HelicopterSightDeploy": return "Deploy Sight";
-\t\t\tcase "HelicopterSightZeroing": return "Sight Zeroing";
-\t\t\tcase "VehicleDoorToggle": return "Toggle Door";
-\t\t\tcase "PerformAction": return "Use / Confirm";
-\t\t\tcase "SelectAction": return "Select Action";
-\t\t\tcase "GadgetMap": return "Map";
-\t\t\tcase "Freelook": return "Freelook";
-\t\t\tcase "FreelookReset": return "Center View";
-\t\t\tcase "FreelookUp": return "Look Up";
-\t\t\tcase "FreelookDown": return "Look Down";
-\t\t\tcase "FreelookLeft": return "Look Left";
-\t\t\tcase "FreelookRight": return "Look Right";
-\t\t\tcase "FocusToggle": return "Focus";
-\t\t\tcase "VONChannel": return "Voice Channel";
-\t\t\tcase "VONDirectToggle": return "Direct Voice";
-\t\t\tcase "PFC_Pitch": return "Pitch";
-\t\t\tcase "PFC_Roll": return "Roll";
-\t\t\tcase "PFC_Yaw": return "Yaw";
-\t\t\tcase "PFC_ThrottleAxis": return "Throttle";
-\t\t\tcase "PFC_GearToggle": return "Landing Gear";
-\t\t\tcase "PFC_Flaps": return "Flaps";
-\t\t\tcase "PFC_Airbrake": return "Airbrake";
-\t\t}
+	protected string MakeReadableActionName(string actionName)
+	{
+		switch (actionName)
+		{
+			case "CharacterNextWeapon": return "Next Weapon";
+			case "TurretNextWeapon": return "Next Weapon";
+			case "TurretWeaponNextRippleQuantity": return "Missile Ripple";
+			case "TurretWeaponNextFireMode": return "Next Fire Mode";
+			case "TurretReload": return "Reload";
+			case "TurretFire": return "Fire";
+			case "HelicopterCyclicForward": return "Cyclic Forward";
+			case "HelicopterCyclicBack": return "Cyclic Back";
+			case "HelicopterCyclicLeft": return "Cyclic Left";
+			case "HelicopterCyclicRight": return "Cyclic Right";
+			case "HelicopterAntiTorqueLeft": return "Pedal Left";
+			case "HelicopterAntiTorqueRight": return "Pedal Right";
+			case "HelicopterCollectiveIncrease": return "Collective Up";
+			case "HelicopterCollectiveDecrease": return "Collective Down";
+			case "HelicopterWheelBrake": return "Wheel Brake";
+			case "HelicopterWheelBrakePersistent": return "Parking Brake";
+			case "HelicopterAutohoverToggle": return "Auto Hover";
+			case "HelicopterLightsTaxiToggle": return "Taxi Lights";
+			case "HelicopterLightsLandingToggle": return "Landing Lights";
+			case "HelicopterEngineStart": return "Engine Start";
+			case "HelicopterEngineStop": return "Engine Stop";
+			case "HelicopterFire": return "Fire";
+			case "HelicopterSightDeploy": return "Deploy Sight";
+			case "HelicopterSightZeroing": return "Sight Zeroing";
+			case "VehicleDoorToggle": return "Toggle Door";
+			case "PerformAction": return "Use / Confirm";
+			case "SelectAction": return "Select Action";
+			case "GadgetMap": return "Map";
+			case "Freelook": return "Freelook";
+			case "FreelookReset": return "Center View";
+			case "FreelookUp": return "Look Up";
+			case "FreelookDown": return "Look Down";
+			case "FreelookLeft": return "Look Left";
+			case "FreelookRight": return "Look Right";
+			case "FocusToggle": return "Focus";
+			case "VONChannel": return "Voice Channel";
+			case "VONDirectToggle": return "Direct Voice";
+			case "PFC_Pitch": return "Pitch";
+			case "PFC_Roll": return "Roll";
+			case "PFC_Yaw": return "Yaw";
+			case "PFC_ThrottleAxis": return "Throttle";
+			case "PFC_GearToggle": return "Landing Gear";
+			case "PFC_Flaps": return "Flaps";
+			case "PFC_Airbrake": return "Airbrake";
+		}
 
-\t\tstring readable = actionName;
-\t\treadable.Replace("WCS_Armament_", "WCS ");
-\t\treadable.Replace("PFC_", "PFC ");
-\t\treadable.Replace("_", " ");
-\t\treturn readable;
-\t}
+		string readable = actionName;
+		readable.Replace("WCS_Armament_", "WCS ");
+		readable.Replace("PFC_", "PFC ");
+		readable.Replace("_", " ");
+		return readable;
+	}
 
 	protected void BuildActionList()
 	{

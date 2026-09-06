@@ -4,6 +4,12 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	protected ref array<SCR_SpinBoxComponent> m_HudControls = {};
 	protected ref array<string> m_UserConfigs = {};
 	protected bool m_bLoading;
+	protected Widget m_PreviewHost;
+	protected Widget m_PreviewSquare;
+	protected Widget m_PreviewSquareBackground;
+	protected Widget m_ScreenPreview;
+	protected Widget m_ScreenPreviewBackground;
+	protected Widget m_HudPositionPreview;
 
 	//------------------------------------------------------------------------------------------------
 	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
@@ -16,7 +22,9 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		m_HotasConfig = FindSpinBox("HOTASConfig");
 		SetupHotasConfigSelector();
 		SetupHudControls();
+		SetupHudPositionPreview();
 		m_bLoading = false;
+		GetGame().GetCallqueue().CallLater(UpdateHudPositionPreview, 0, false);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -29,6 +37,17 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SyncHotasConfigSelector();
 		SyncHudControls();
 		m_bLoading = false;
+
+		GetGame().GetCallqueue().Remove(UpdateHudPositionPreview);
+		GetGame().GetCallqueue().CallLater(UpdateHudPositionPreview, 0, false);
+		GetGame().GetCallqueue().CallLater(UpdateHudPositionPreview, 250, true);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override void OnTabHide()
+	{
+		GetGame().GetCallqueue().Remove(UpdateHudPositionPreview);
+		super.OnTabHide();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -143,6 +162,119 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		Print(string.Format("[HOTAS Debugger] HOTAS input config selected from Settings: %1", selectedConfig), LogLevel.NORMAL);
 	}
 
+
+	//------------------------------------------------------------------------------------------------
+	protected void SetupHudPositionPreview()
+	{
+		m_PreviewHost = m_wRoot.FindAnyWidget("HUDPreviewHost");
+		m_PreviewSquare = m_wRoot.FindAnyWidget("HUDPreviewSquare");
+		m_PreviewSquareBackground = m_wRoot.FindAnyWidget("HUDPreviewSquareBackground");
+		m_ScreenPreview = m_wRoot.FindAnyWidget("HUDScreenPreview");
+		m_ScreenPreviewBackground = m_wRoot.FindAnyWidget("HUDScreenPreviewBackground");
+		m_HudPositionPreview = m_wRoot.FindAnyWidget("HUDPositionPreview");
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void UpdateHudPositionPreview()
+	{
+		if (!m_PreviewHost || !m_PreviewSquare || !m_PreviewSquareBackground || !m_ScreenPreview || !m_ScreenPreviewBackground || !m_HudPositionPreview)
+			return;
+
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (!workspace)
+			return;
+
+		float hostWidthPx;
+		float hostHeightPx;
+		m_PreviewHost.GetScreenSize(hostWidthPx, hostHeightPx);
+		float hostWidth = workspace.DPIUnscale(hostWidthPx);
+		float hostHeight = workspace.DPIUnscale(hostHeightPx);
+		if (hostWidth <= 1 || hostHeight <= 1)
+			return;
+
+		// The outer preview stays square, while the inner screen preserves the player's
+		// actual current display aspect ratio. This makes ultrawide, 16:9, 16:10 and
+		// other resolutions preview the same normalized HUD placement used in game.
+		float squareSize = Math.Min(hostWidth, hostHeight) - 24;
+		if (squareSize <= 32)
+			return;
+
+		float squareLeft = (hostWidth - squareSize) * 0.5;
+		float squareTop = (hostHeight - squareSize) * 0.5;
+		FrameSlot.SetPos(m_PreviewSquare, squareLeft, squareTop);
+		FrameSlot.SetSize(m_PreviewSquare, squareSize, squareSize);
+		FrameSlot.SetPos(m_PreviewSquareBackground, 0, 0);
+		FrameSlot.SetSize(m_PreviewSquareBackground, squareSize, squareSize);
+
+		float screenWidth = workspace.GetWidth();
+		float screenHeight = workspace.GetHeight();
+		if (screenWidth <= 0 || screenHeight <= 0)
+			return;
+
+		float inset = 24;
+		float available = squareSize - inset * 2;
+		if (available <= 1)
+			return;
+
+		float screenAspect = screenWidth / screenHeight;
+		float previewWidth = available;
+		float previewHeight = available / screenAspect;
+		if (previewHeight > available)
+		{
+			previewHeight = available;
+			previewWidth = available * screenAspect;
+		}
+
+		float screenLeft = (squareSize - previewWidth) * 0.5;
+		float screenTop = (squareSize - previewHeight) * 0.5;
+		FrameSlot.SetPos(m_ScreenPreview, screenLeft, screenTop);
+		FrameSlot.SetSize(m_ScreenPreview, previewWidth, previewHeight);
+		FrameSlot.SetPos(m_ScreenPreviewBackground, 0, 0);
+		FrameSlot.SetSize(m_ScreenPreviewBackground, previewWidth, previewHeight);
+
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		int positionIndex = controller.GetSettingOptionIndex(1);
+		float hudScale = 0.5 + controller.GetSettingOptionIndex(2) * 0.1;
+
+		float hudWidth = 700 * hudScale;
+		float hudHeight = 70 * hudScale;
+		float marginX = 48 * hudScale;
+		float marginY = 54 * hudScale;
+		float hudLeft = (screenWidth - hudWidth) * 0.5;
+		float hudTop = screenHeight - hudHeight - marginY;
+
+		switch (positionIndex)
+		{
+			case 0: hudLeft = marginX; hudTop = marginY; break;
+			case 1: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = marginY; break;
+			case 2: hudLeft = screenWidth - hudWidth - marginX; hudTop = marginY; break;
+			case 3: hudLeft = marginX; hudTop = (screenHeight - hudHeight) * 0.5; break;
+			case 4: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = (screenHeight - hudHeight) * 0.5; break;
+			case 5: hudLeft = screenWidth - hudWidth - marginX; hudTop = (screenHeight - hudHeight) * 0.5; break;
+			case 6: hudLeft = marginX; hudTop = screenHeight - hudHeight - marginY; break;
+			case 7: hudLeft = (screenWidth - hudWidth) * 0.5; hudTop = screenHeight - hudHeight - marginY; break;
+			case 8: hudLeft = screenWidth - hudWidth - marginX; hudTop = screenHeight - hudHeight - marginY; break;
+		}
+
+		float previewHudWidth = previewWidth * (hudWidth / screenWidth);
+		float previewHudHeight = previewHeight * (hudHeight / screenHeight);
+		float previewHudLeft = previewWidth * (hudLeft / screenWidth);
+		float previewHudTop = previewHeight * (hudTop / screenHeight);
+
+		if (previewHudWidth < 8)
+			previewHudWidth = 8;
+		if (previewHudHeight < 5)
+			previewHudHeight = 5;
+
+		FrameSlot.SetPos(m_HudPositionPreview, previewHudLeft, previewHudTop);
+		FrameSlot.SetSize(m_HudPositionPreview, previewHudWidth, previewHudHeight);
+
+		if (controller.GetSettingOptionIndex(0) == 0)
+			m_HudPositionPreview.SetOpacity(0.3);
+		else
+			m_HudPositionPreview.SetOpacity(0.9);
+	}
+
 	//------------------------------------------------------------------------------------------------
 	protected void SetupHudControls()
 	{
@@ -205,6 +337,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 				continue;
 
 			HOTASDebugController.GetInstance().SetSettingOptionIndex(i, optionIndex);
+			UpdateHudPositionPreview();
 			return;
 		}
 	}

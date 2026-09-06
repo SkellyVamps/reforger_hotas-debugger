@@ -7,6 +7,7 @@ class HOTASDebugController
 	protected RichTextWidget m_DebugText;
 	protected Widget m_HudBackground;
 	protected Widget m_HudLayoutRoot;
+	protected Widget m_HudRootWidget;
 	protected RichTextWidget m_InputText;
 	protected RichTextWidget m_SeparatorText;
 	protected RichTextWidget m_ActionText;
@@ -14,7 +15,13 @@ class HOTASDebugController
 	protected ref array<string> m_WatchedActions = {};
 	protected bool m_bInitialized;
 	protected bool m_bDebugMode = false;
+	protected bool m_bHudEnabled = true;
 	protected int m_iEventCounter;
+
+	protected static const int HOTAS_CONTEXT_NONE = 0;
+	protected static const int HOTAS_CONTEXT_TURRET = 1;
+	protected static const int HOTAS_CONTEXT_HELICOPTER = 2;
+	protected static const int HOTAS_CONTEXT_FIXED_WING = 3;
 
 	// Normal HUD user settings. Values are loaded from $profile:HOTASHudSettings.txt.
 	protected string m_sHudPosition = "bottom_center";
@@ -78,28 +85,14 @@ class HOTASDebugController
 		{
 			foreach (string actionName : m_WatchedActions)
 				m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+
+			m_InputManager.RemoveActionListener("HOTASSettingsToggle", EActionTrigger.DOWN, OnSettingsToggle);
 		}
 
 		GetGame().GetCallqueue().Remove(StartFade);
 		GetGame().GetCallqueue().Remove(FadeStep);
 
-		if (m_HudLayoutRoot)
-			m_HudLayoutRoot.RemoveFromHierarchy();
-		else
-		{
-			if (m_DebugText)
-				m_DebugText.RemoveFromHierarchy();
-			if (m_HudBackground)
-				m_HudBackground.RemoveFromHierarchy();
-		}
-
-		m_DebugText = null;
-		m_HudBackground = null;
-		m_HudLayoutRoot = null;
-		m_InputText = null;
-		m_SeparatorText = null;
-		m_ActionText = null;
-		m_bUsingLayoutHud = false;
+		DestroyHud();
 		m_InputBinding = null;
 		m_InputManager = null;
 		m_bInitialized = false;
@@ -127,6 +120,52 @@ class HOTASDebugController
 	{
 		foreach (string actionName : m_WatchedActions)
 			m_InputManager.AddActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+
+		m_InputManager.AddActionListener("HOTASSettingsToggle", EActionTrigger.DOWN, OnSettingsToggle);
+	}
+
+	protected void DestroyHud()
+	{
+		GetGame().GetCallqueue().Remove(StartFade);
+		GetGame().GetCallqueue().Remove(FadeStep);
+
+		if (m_HudLayoutRoot)
+			m_HudLayoutRoot.RemoveFromHierarchy();
+		else
+		{
+			if (m_DebugText)
+				m_DebugText.RemoveFromHierarchy();
+			if (m_HudBackground)
+				m_HudBackground.RemoveFromHierarchy();
+		}
+
+		m_DebugText = null;
+		m_HudBackground = null;
+		m_HudLayoutRoot = null;
+		m_HudRootWidget = null;
+		m_InputText = null;
+		m_SeparatorText = null;
+		m_ActionText = null;
+		m_bUsingLayoutHud = false;
+	}
+
+	protected void RebuildHud()
+	{
+		DestroyHud();
+		CreateHud();
+	}
+
+	protected void OnSettingsToggle(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
+	{
+		MenuManager menuManager = GetGame().GetMenuManager();
+		if (!menuManager)
+			return;
+
+		MenuBase existing = menuManager.FindMenuByPreset(ChimeraMenuPreset.HOTASSettingsMenu);
+		if (existing)
+			menuManager.CloseMenu(existing);
+		else
+			menuManager.OpenMenu(ChimeraMenuPreset.HOTASSettingsMenu);
 	}
 
 	protected void CreateHud()
@@ -137,6 +176,9 @@ class HOTASDebugController
 			Print("[HOTAS Debugger] Workspace is not available", LogLevel.ERROR);
 			return;
 		}
+
+		if (!m_bHudEnabled)
+			return;
 
 		// Normal mode prefers the Workbench-editable layout. Until the named widgets are
 		// added in Layout Editor, we safely fall back to the script-created HUD below.
@@ -242,16 +284,20 @@ class HOTASDebugController
 			return false;
 		}
 
+		m_HudRootWidget = m_HudLayoutRoot.FindAnyWidget("HudRoot");
 		m_InputText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("InputText"));
 		m_SeparatorText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("SeparatorText"));
 		m_ActionText = RichTextWidget.Cast(m_HudLayoutRoot.FindAnyWidget("ActionText"));
-		m_HudBackground = m_HudLayoutRoot.FindAnyWidget("Background");
+		m_HudBackground = m_HudLayoutRoot.FindAnyWidget("BackgroundImage");
+		if (!m_HudBackground)
+			m_HudBackground = m_HudLayoutRoot.FindAnyWidget("Background");
 
-		if (!m_InputText || !m_SeparatorText || !m_ActionText)
+		if (!m_HudRootWidget || !m_InputText || !m_SeparatorText || !m_ActionText)
 		{
 			Print("[HOTAS Debugger] HOTASInputHUD.layout is present but needs named RichText widgets: InputText, SeparatorText, ActionText. Using script HUD until the layout is ready.", LogLevel.WARNING);
 			m_HudLayoutRoot.RemoveFromHierarchy();
 			m_HudLayoutRoot = null;
+			m_HudRootWidget = null;
 			m_InputText = null;
 			m_SeparatorText = null;
 			m_ActionText = null;
@@ -261,12 +307,43 @@ class HOTASDebugController
 
 		m_bUsingLayoutHud = true;
 		m_SeparatorText.SetText("|");
+		ApplyLayoutHudPresentation();
 		m_HudLayoutRoot.SetOpacity(0.0);
-		if (m_HudBackground && !m_bBackgroundEnabled)
-			m_HudBackground.SetOpacity(0.0);
 
 		Print("[HOTAS Debugger] Using Workbench-editable HOTASInputHUD.layout", LogLevel.NORMAL);
 		return true;
+	}
+
+	protected void ApplyLayoutHudPresentation()
+	{
+		if (!m_HudRootWidget || !m_InputText || !m_SeparatorText || !m_ActionText)
+			return;
+
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (!workspace)
+			return;
+
+		int width = Math.Round(700 * m_fHudScale);
+		int height = Math.Round(70 * m_fHudScale);
+		int left;
+		int top;
+		GetHudPosition(workspace, width, height, left, top);
+
+		FrameSlot.SetPos(m_HudRootWidget, left, top);
+		FrameSlot.SetSize(m_HudRootWidget, width, height);
+
+		int fontSize = Math.Round(26 * m_fHudScale);
+		m_InputText.SetExactFontSize(fontSize);
+		m_SeparatorText.SetExactFontSize(fontSize);
+		m_ActionText.SetExactFontSize(fontSize);
+
+		if (m_HudBackground)
+		{
+			if (m_bBackgroundEnabled)
+				m_HudBackground.SetOpacity(m_fBackgroundOpacity);
+			else
+				m_HudBackground.SetOpacity(0.0);
+		}
 	}
 
 	protected void GetHudPosition(WorkspaceWidget workspace, int width, int height, out int left, out int top)
@@ -330,6 +407,8 @@ class HOTASDebugController
 			if (defaults)
 			{
 				defaults.WriteLine("# HOTAS Input HUD settings");
+				defaults.WriteLine("hud_enabled=1");
+				defaults.WriteLine("debug_mode=0");
 				defaults.WriteLine("# position: top_left, top_center, top_right, center_left, center, center_right, bottom_left, bottom_center, bottom_right");
 				defaults.WriteLine("position=bottom_center");
 				defaults.WriteLine("scale=1.0");
@@ -364,7 +443,11 @@ class HOTASDebugController
 
 			string key = parts[0].Trim();
 			string value = parts[1].Trim();
-			if (key == "position")
+			if (key == "hud_enabled")
+				m_bHudEnabled = value.ToInt(1) != 0;
+			else if (key == "debug_mode")
+				m_bDebugMode = value.ToInt(0) != 0;
+			else if (key == "position")
 				m_sHudPosition = value;
 			else if (key == "scale")
 				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.5, 2.0);
@@ -391,8 +474,203 @@ class HOTASDebugController
 		Print(string.Format("[HOTAS Debugger] Axis mapping: roll=%1 pitch=%2 throttle=%3 yaw=%4", m_iRollAxis, m_iPitchAxis, m_iThrottleAxis, m_iYawAxis), LogLevel.NORMAL);
 	}
 
+	protected int BoolToInt(bool value)
+	{
+		if (value)
+			return 1;
+		return 0;
+	}
+
+	protected void SaveHudSettings()
+	{
+		FileHandle file = FileIO.OpenFile("$profile:HOTASHudSettings.txt", FileMode.WRITE);
+		if (!file)
+			return;
+
+		file.WriteLine("# HOTAS Input HUD settings");
+		file.WriteLine(string.Format("hud_enabled=%1", BoolToInt(m_bHudEnabled)));
+		file.WriteLine(string.Format("debug_mode=%1", BoolToInt(m_bDebugMode)));
+		file.WriteLine(string.Format("position=%1", m_sHudPosition));
+		file.WriteLine(string.Format("scale=%1", m_fHudScale));
+		file.WriteLine(string.Format("fade_delay_ms=%1", m_iFadeDelayMs));
+		file.WriteLine(string.Format("fade_duration_ms=%1", m_iFadeDurationMs));
+		file.WriteLine(string.Format("background=%1", BoolToInt(m_bBackgroundEnabled)));
+		file.WriteLine(string.Format("background_opacity=%1", m_fBackgroundOpacity));
+		file.WriteLine("# Raw joystick axis mapping. Human-facing menu labels are one-based; -1 disables a semantic label.");
+		file.WriteLine(string.Format("roll_axis=%1", m_iRollAxis));
+		file.WriteLine(string.Format("pitch_axis=%1", m_iPitchAxis));
+		file.WriteLine(string.Format("throttle_axis=%1", m_iThrottleAxis));
+		file.WriteLine(string.Format("yaw_axis=%1", m_iYawAxis));
+		file.Close();
+	}
+
+	int GetSettingsCount()
+	{
+		return 12;
+	}
+
+	string GetSettingLabel(int index)
+	{
+		switch (index)
+		{
+			case 0: return "HUD Enabled";
+			case 1: return "Position";
+			case 2: return "Scale";
+			case 3: return "Fade Delay";
+			case 4: return "Fade Duration";
+			case 5: return "Background";
+			case 6: return "Background Opacity";
+			case 7: return "Roll Axis";
+			case 8: return "Pitch Axis";
+			case 9: return "Throttle Axis";
+			case 10: return "Yaw Axis";
+			case 11: return "Debug Mode";
+		}
+		return "Unknown";
+	}
+
+	protected string GetAxisSettingValue(int rawAxis)
+	{
+		if (rawAxis < 0)
+			return "Disabled";
+		return string.Format("Axis %1", rawAxis + 1);
+	}
+
+	protected string GetHudPositionDisplayName()
+	{
+		switch (m_sHudPosition)
+		{
+			case "top_left": return "Top Left";
+			case "top_center": return "Top Center";
+			case "top_right": return "Top Right";
+			case "center_left": return "Center Left";
+			case "center": return "Center";
+			case "center_right": return "Center Right";
+			case "bottom_left": return "Bottom Left";
+			case "bottom_right": return "Bottom Right";
+		}
+		return "Bottom Center";
+	}
+
+	string GetSettingValue(int index)
+	{
+		switch (index)
+		{
+			case 0:
+				if (m_bHudEnabled) return "On";
+				return "Off";
+			case 1: return GetHudPositionDisplayName();
+			case 2: return string.Format("%1x", m_fHudScale.ToString(1));
+			case 3: return string.Format("%1 ms", m_iFadeDelayMs);
+			case 4: return string.Format("%1 ms", m_iFadeDurationMs);
+			case 5:
+				if (m_bBackgroundEnabled) return "On";
+				return "Off";
+			case 6: return string.Format("%1%", Math.Round(m_fBackgroundOpacity * 100));
+			case 7: return GetAxisSettingValue(m_iRollAxis);
+			case 8: return GetAxisSettingValue(m_iPitchAxis);
+			case 9: return GetAxisSettingValue(m_iThrottleAxis);
+			case 10: return GetAxisSettingValue(m_iYawAxis);
+			case 11:
+				if (m_bDebugMode) return "On";
+				return "Off";
+		}
+		return "";
+	}
+
+	protected int GetHudPositionIndex()
+	{
+		switch (m_sHudPosition)
+		{
+			case "top_left": return 0;
+			case "top_center": return 1;
+			case "top_right": return 2;
+			case "center_left": return 3;
+			case "center": return 4;
+			case "center_right": return 5;
+			case "bottom_left": return 6;
+			case "bottom_center": return 7;
+			case "bottom_right": return 8;
+		}
+		return 7;
+	}
+
+	protected void SetHudPositionIndex(int index)
+	{
+		while (index < 0)
+			index += 9;
+		while (index >= 9)
+			index -= 9;
+
+		switch (index)
+		{
+			case 0: m_sHudPosition = "top_left"; break;
+			case 1: m_sHudPosition = "top_center"; break;
+			case 2: m_sHudPosition = "top_right"; break;
+			case 3: m_sHudPosition = "center_left"; break;
+			case 4: m_sHudPosition = "center"; break;
+			case 5: m_sHudPosition = "center_right"; break;
+			case 6: m_sHudPosition = "bottom_left"; break;
+			case 7: m_sHudPosition = "bottom_center"; break;
+			case 8: m_sHudPosition = "bottom_right"; break;
+		}
+	}
+
+	void AdjustSetting(int index, int direction)
+	{
+		if (direction == 0)
+			direction = 1;
+
+		switch (index)
+		{
+			case 0:
+				m_bHudEnabled = !m_bHudEnabled;
+				break;
+			case 1:
+				SetHudPositionIndex(GetHudPositionIndex() + direction);
+				break;
+			case 2:
+				m_fHudScale = Math.Clamp(m_fHudScale + (0.1 * direction), 0.5, 2.0);
+				break;
+			case 3:
+				m_iFadeDelayMs = Math.ClampInt(m_iFadeDelayMs + (100 * direction), 0, 10000);
+				break;
+			case 4:
+				m_iFadeDurationMs = Math.ClampInt(m_iFadeDurationMs + (50 * direction), 0, 5000);
+				break;
+			case 5:
+				m_bBackgroundEnabled = !m_bBackgroundEnabled;
+				break;
+			case 6:
+				m_fBackgroundOpacity = Math.Clamp(m_fBackgroundOpacity + (0.05 * direction), 0.0, 1.0);
+				break;
+			case 7:
+				m_iRollAxis = Math.ClampInt(m_iRollAxis + direction, -1, 63);
+				break;
+			case 8:
+				m_iPitchAxis = Math.ClampInt(m_iPitchAxis + direction, -1, 63);
+				break;
+			case 9:
+				m_iThrottleAxis = Math.ClampInt(m_iThrottleAxis + direction, -1, 63);
+				break;
+			case 10:
+				m_iYawAxis = Math.ClampInt(m_iYawAxis + direction, -1, 63);
+				break;
+			case 11:
+				m_bDebugMode = !m_bDebugMode;
+				break;
+			default:
+				return;
+		}
+
+		SaveHudSettings();
+		RebuildHud();
+	}
+
 	protected void ShowHud()
 	{
+		if (!m_bHudEnabled)
+			return;
 		if (m_bDebugMode)
 			return;
 		if (m_bUsingLayoutHud && !m_HudLayoutRoot)
@@ -473,47 +751,144 @@ class HOTASDebugController
 		}
 	}
 
-	protected bool IsPlayerInAircraftOrTurret()
+	protected int GetPlayerHotasContext()
 	{
 		ChimeraCharacter character = ChimeraCharacter.Cast(SCR_PlayerController.GetLocalControlledEntity());
 		if (!character)
-			return false;
+			return HOTAS_CONTEXT_NONE;
 
 		CompartmentAccessComponent compartmentAccess = character.GetCompartmentAccessComponent();
 		if (!compartmentAccess || !compartmentAccess.IsInCompartment())
-			return false;
+			return HOTAS_CONTEXT_NONE;
 
 		BaseCompartmentSlot slot = compartmentAccess.GetCompartment();
 		if (!slot)
-			return false;
+			return HOTAS_CONTEXT_NONE;
 
-		// Any turret seat is valid, whether it is vehicle-mounted or a static emplacement.
 		if (TurretCompartmentSlot.Cast(slot))
-			return true;
+			return HOTAS_CONTEXT_TURRET;
 
-		// Aircraft controls are only relevant from a pilot compartment.
 		if (!PilotCompartmentSlot.Cast(slot))
-			return false;
+			return HOTAS_CONTEXT_NONE;
 
 		IEntity vehicle = compartmentAccess.GetVehicleCompartmentManagerOwner();
 		if (!vehicle)
 			vehicle = slot.GetOwner();
 		if (!vehicle)
-			return false;
+			return HOTAS_CONTEXT_NONE;
 
-		// Vanilla helicopters expose a helicopter controller directly.
 		if (vehicle.FindComponent(HelicopterControllerComponent))
-			return true;
+			return HOTAS_CONTEXT_HELICOPTER;
 
-		// Modded fixed-wing aircraft commonly use a pilot compartment with a custom
-		// controller. Exclude known ground-vehicle controllers so those seats do not
-		// activate the HOTAS HUD while still allowing custom aircraft implementations.
 		if (vehicle.FindComponent(SCR_CarControllerComponent))
-			return false;
+			return HOTAS_CONTEXT_NONE;
 		if (vehicle.FindComponent(SCR_TrackedControllerComponent))
+			return HOTAS_CONTEXT_NONE;
+
+		// A pilot seat without a known ground-vehicle controller is treated as fixed-wing.
+		// This keeps compatibility with PFC and other modded aircraft controllers.
+		return HOTAS_CONTEXT_FIXED_WING;
+	}
+
+	protected bool IsSharedHotasAction(string actionName)
+	{
+		return actionName == "VehicleDoorToggle"
+			|| actionName == "FocusToggle"
+			|| actionName == "Freelook"
+			|| actionName == "FreelookReset"
+			|| actionName == "FreelookUp"
+			|| actionName == "FreelookDown"
+			|| actionName == "FreelookLeft"
+			|| actionName == "FreelookRight"
+			|| actionName == "VONDirectToggle"
+			|| actionName == "VONChannel"
+			|| actionName == "GadgetMap"
+			|| actionName == "PerformAction"
+			|| actionName == "SelectAction"
+			|| actionName == "GetOut"
+			|| actionName == "JumpOut";
+	}
+
+	protected bool IsAircraftWeaponAction(string actionName)
+	{
+		return actionName == "VehicleFire"
+			|| actionName == "VehicleNextWeapon"
+			|| actionName == "TurretFire"
+			|| actionName == "TurretReload"
+			|| actionName == "TurretNextWeapon"
+			|| actionName == "TurretWeaponNextFireMode"
+			|| actionName == "TurretWeaponNextRippleQuantity"
+			|| actionName == "TurretADS"
+			|| actionName == "TurretADSHold"
+			|| actionName == "WeaponToggleSightsIllumination"
+			|| actionName == "WeaponSwitchOptics";
+	}
+
+	protected bool IsAircraftWcsAction(string actionName)
+	{
+		if (!actionName.StartsWith("WCS_Armament_"))
+			return false;
+
+		// Ground-only smoke/stabilization actions should not appear while flying.
+		if (actionName == "WCS_Armament_TurretStabilizationToggle")
+			return false;
+		if (actionName == "WCS_Armament_DeploySmoke")
+			return false;
+		if (actionName == "WCS_Armament_FireContinuousSmokeDispenser")
 			return false;
 
 		return true;
+	}
+
+	protected bool IsTurretWcsAction(string actionName)
+	{
+		if (!actionName.StartsWith("WCS_Armament_"))
+			return false;
+
+		// Countermeasure actions are aircraft-specific.
+		if (actionName == "WCS_Armament_DeployFlares")
+			return false;
+		if (actionName == "WCS_Armament_DeployChaffs")
+			return false;
+
+		return true;
+	}
+
+	protected bool IsActionAllowedForContext(string actionName, int context)
+	{
+		if (IsSharedHotasAction(actionName))
+			return true;
+
+		if (context == HOTAS_CONTEXT_TURRET)
+		{
+			if (actionName.StartsWith("Turret"))
+				return true;
+			if (actionName.StartsWith("Weapon"))
+				return true;
+			if (actionName == "VehicleFire" || actionName == "VehicleNextWeapon")
+				return true;
+			return IsTurretWcsAction(actionName);
+		}
+
+		if (context == HOTAS_CONTEXT_HELICOPTER)
+		{
+			if (actionName.StartsWith("Helicopter"))
+				return true;
+			if (IsAircraftWeaponAction(actionName))
+				return true;
+			return IsAircraftWcsAction(actionName);
+		}
+
+		if (context == HOTAS_CONTEXT_FIXED_WING)
+		{
+			if (actionName.StartsWith("PFC_"))
+				return true;
+			if (IsAircraftWeaponAction(actionName))
+				return true;
+			return IsAircraftWcsAction(actionName);
+		}
+
+		return false;
 	}
 
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
@@ -521,9 +896,13 @@ class HOTASDebugController
 		if (actionName.IsEmpty())
 			return;
 
-		// Ignore watched actions completely unless the local player is currently
-		// occupying an aircraft pilot seat or a turret seat.
-		if (!IsPlayerInAircraftOrTurret())
+		if (!m_bHudEnabled)
+			return;
+
+		int hotasContext = GetPlayerHotasContext();
+		if (hotasContext == HOTAS_CONTEXT_NONE)
+			return;
+		if (!IsActionAllowedForContext(actionName, hotasContext))
 			return;
 
 		m_iEventCounter++;

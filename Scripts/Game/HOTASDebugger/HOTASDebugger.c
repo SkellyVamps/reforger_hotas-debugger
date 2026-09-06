@@ -20,6 +20,12 @@ class HOTASDebugController
 	protected float m_fBackgroundOpacity = 0.55;
 	protected float m_fFadeOpacity = 1.0;
 
+	// Raw joystick axis numbers used by this HOTAS. Users can remap these in HOTASHudSettings.txt.
+	protected int m_iRollAxis = 0;
+	protected int m_iPitchAxis = 1;
+	protected int m_iThrottleAxis = 2;
+	protected int m_iYawAxis = 5;
+
 	static HOTASDebugController GetInstance()
 	{
 		if (!s_Instance)
@@ -263,6 +269,11 @@ class HOTASDebugController
 				defaults.WriteLine("fade_duration_ms=350");
 				defaults.WriteLine("background=1");
 				defaults.WriteLine("background_opacity=0.55");
+				defaults.WriteLine("# Raw joystick axis mapping. Set an unused control to -1.");
+				defaults.WriteLine("roll_axis=0");
+				defaults.WriteLine("pitch_axis=1");
+				defaults.WriteLine("throttle_axis=2");
+				defaults.WriteLine("yaw_axis=5");
 				defaults.Close();
 			}
 		}
@@ -297,10 +308,18 @@ class HOTASDebugController
 				m_bBackgroundEnabled = value.ToInt(1) != 0;
 			else if (key == "background_opacity")
 				m_fBackgroundOpacity = Math.Clamp(value.ToFloat(0.55), 0.0, 1.0);
+			else if (key == "roll_axis")
+				m_iRollAxis = Math.ClampInt(value.ToInt(0), -1, 63);
+			else if (key == "pitch_axis")
+				m_iPitchAxis = Math.ClampInt(value.ToInt(1), -1, 63);
+			else if (key == "throttle_axis")
+				m_iThrottleAxis = Math.ClampInt(value.ToInt(2), -1, 63);
+			else if (key == "yaw_axis")
+				m_iYawAxis = Math.ClampInt(value.ToInt(5), -1, 63);
 		}
 		file.Close();
 
-		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1 scale=%2 fade=%3/%4 background=%5 opacity=%6", m_sHudPosition, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
+		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1 scale=%2 fade=%3/%4 background=%5 opacity=%6 axes R/P/T/Y=%7/%8/%9/%10", m_sHudPosition, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity, m_iRollAxis, m_iPitchAxis, m_iThrottleAxis, m_iYawAxis), LogLevel.NORMAL);
 	}
 
 	protected void ShowHud()
@@ -493,13 +512,14 @@ class HOTASDebugController
 
 				int rawAxis = axisText.ToInt();
 				string axisName;
-				switch (rawAxis)
-				{
-					case 0: axisName = "ROLL"; break;
-					case 1: axisName = "PITCH"; break;
-					case 2: axisName = "THROTTLE"; break;
-					case 5: axisName = "YAW"; break;
-				}
+				if (rawAxis == m_iRollAxis && m_iRollAxis >= 0)
+					axisName = "ROLL";
+				else if (rawAxis == m_iPitchAxis && m_iPitchAxis >= 0)
+					axisName = "PITCH";
+				else if (rawAxis == m_iThrottleAxis && m_iThrottleAxis >= 0)
+					axisName = "THROTTLE";
+				else if (rawAxis == m_iYawAxis && m_iYawAxis >= 0)
+					axisName = "YAW";
 
 				if (!axisName.IsEmpty())
 					readable = string.Format("%1 %2", axisName, direction);

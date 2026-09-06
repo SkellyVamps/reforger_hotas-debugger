@@ -150,28 +150,76 @@ class HOTASDebugController
 
 	protected string GetJoystickBindings(string actionName)
 	{
-		if (!m_InputBinding)
-			return "Binding API unavailable";
-
-		ref array<string> bindings = {};
-		bool found = m_InputBinding.GetBindings(actionName, bindings, EInputDeviceType.JOYSTICK, string.Empty, false);
-		if (!found || bindings.IsEmpty())
-			return "No binding reported";
+		if (!m_InputManager)
+			return "InputManager unavailable";
 
 		string joystickBindings;
-		foreach (string binding : bindings)
+
+		// Query the active runtime ActionManager first. The separate InputBinding object can
+		// report zero bindings even while a custom joystick config is actively driving actions.
+		for (int bindIndex = 0; bindIndex < 16; bindIndex++)
 		{
-			if (binding.IndexOf("joystick") != 0)
-				continue;
+			ref array<string> keyStack = {};
+			ref array<BaseContainer> filterStack = {};
+			bool found = m_InputManager.GetActionKeybinding(
+				actionName,
+				keyStack,
+				filterStack,
+				EInputDeviceType.JOYSTICK,
+				string.Empty,
+				bindIndex
+			);
 
-			if (!joystickBindings.IsEmpty())
-				joystickBindings += " / ";
+			if (!found)
+				break;
 
-			joystickBindings += binding;
+			foreach (string binding : keyStack)
+			{
+				if (!joystickBindings.IsEmpty())
+					joystickBindings += " / ";
+
+				joystickBindings += binding;
+			}
+		}
+
+		if (!joystickBindings.IsEmpty())
+			return joystickBindings;
+
+		// Fallback for actions where the runtime manager does not expose an indexed binding.
+		ref array<string> keyStackFallback = {};
+		ref array<BaseContainer> filterStackFallback = {};
+		if (m_InputManager.GetActionKeybinding(actionName, keyStackFallback, filterStackFallback, EInputDeviceType.JOYSTICK, string.Empty, -1))
+		{
+			foreach (string binding : keyStackFallback)
+			{
+				if (!joystickBindings.IsEmpty())
+					joystickBindings += " / ";
+
+				joystickBindings += binding;
+			}
+		}
+
+		if (!joystickBindings.IsEmpty())
+			return joystickBindings;
+
+		// Final compatibility fallback to InputBinding.
+		if (m_InputBinding)
+		{
+			ref array<string> bindings = {};
+			if (m_InputBinding.GetBindings(actionName, bindings, EInputDeviceType.JOYSTICK, string.Empty, false))
+			{
+				foreach (string binding : bindings)
+				{
+					if (!joystickBindings.IsEmpty())
+						joystickBindings += " / ";
+
+					joystickBindings += binding;
+				}
+			}
 		}
 
 		if (joystickBindings.IsEmpty())
-			return "Action fired, but no joystick binding was returned";
+			return "Action fired, but active joystick binding lookup returned nothing";
 
 		return joystickBindings;
 	}

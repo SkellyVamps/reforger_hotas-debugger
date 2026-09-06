@@ -28,7 +28,7 @@ FrameWidgetClass {
         HorizontalAlign 3
         VerticalAlign 3
        }
-       Color 0.0052 0.007 0.0091 0.6
+       Color 0.0052 0.007 0.0091 1
        Size 1024 1024
        Progress 0.23
        Range 0.77

@@ -1,0 +1,97 @@
+FrameWidgetClass "{961CCB5744DD9687}" {
+ Name "root"
+ {
+  ImageWidgetClass "{A377EAD8C4ED4E09}" {
+   Name "ScreenDim"
+   Slot FrameWidgetSlot "{18DEDFF04BA5B82D}" {
+    PositionX 0
+    OffsetLeft 0
+    PositionY 0
+    OffsetTop 0
+    SizeX 1920
+    OffsetRight -1920
+    SizeY 1080
+    OffsetBottom -1080
+    Alignment 0 0
+   }
+   Color 0 0 0 0.6
+   Size 1024 1024
+  }
+  ImageWidgetClass "{3CB69B8219EB2FA1}" {
+   Name "SettingsPanel"
+   Slot FrameWidgetSlot "{4D1F7920F8378D45}" {
+    PositionX 410
+    OffsetLeft 410
+    PositionY 135
+    OffsetTop 135
+    SizeX 1100
+    OffsetRight -1510
+    SizeY 810
+    OffsetBottom -945
+    Alignment 0 0
+   }
+   Color 0.0052 0.007 0.0091 0.96
+   Size 1024 1024
+  }
+  RichTextWidgetClass "{62484E5A350DCC00}" {
+   Name "SettingsTitle"
+   Slot FrameWidgetSlot "{491A433EB49B0C94}" {
+    PositionX 470
+    OffsetLeft 470
+    PositionY 185
+    OffsetTop 185
+    SizeX 980
+    OffsetRight -1450
+    SizeY 60
+    OffsetBottom -245
+    Alignment 0 0
+   }
+   Color 0.7605 0.3865 0.0802 1
+   Text "HOTAS INPUT HUD SETTINGS"
+   "Font Size" 34
+   "Vertical Alignment" Center
+   FontProperties FontProperties "{40FCA30E15299919}" {
+    Bold 1
+   }
+  }
+  RichTextWidgetClass "{81E74E4852055982}" {
+   Name "SettingsBody"
+   Slot FrameWidgetSlot "{54292AAAF10EE378}" {
+    PositionX 500
+    OffsetLeft 500
+    PositionY 275
+    OffsetTop 275
+    SizeX 920
+    OffsetRight -1420
+    SizeY 560
+    OffsetBottom -835
+    Alignment 0 0
+   }
+   Text "Loading settings..."
+   "Font Size" 27
+   "Min Font Size" 27
+   "Vertical Alignment" Top
+   FontProperties FontProperties "{9EE09AFEF5F913AB}" {
+    Bold 1
+   }
+  }
+  RichTextWidgetClass "{CC59847361AFE4D2}" {
+   Name "SettingsHelp"
+   Slot FrameWidgetSlot "{D69DFDF2E5046D29}" {
+    PositionX 470
+    OffsetLeft 470
+    PositionY 855
+    OffsetTop 855
+    SizeX 980
+    OffsetRight -1450
+    SizeY 50
+    OffsetBottom -905
+    Alignment 0 0
+   }
+   Color 0.72 0.72 0.72 1
+   Text "UP / DOWN: Select     LEFT / RIGHT: Change     ENTER: Toggle / Advance     ESC or F10: Close"
+   "Font Size" 19
+   "Vertical Alignment" Center
+  }
+ }
+}

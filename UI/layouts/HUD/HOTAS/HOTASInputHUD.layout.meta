@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{25F3F1C1A41EA7E1}UI/layouts/HUD/HOTAS/HOTASInputHUD.layout"
+ Configurations {
+  LayoutResourceClass PC {
+  }
+  LayoutResourceClass XBOX_ONE : PC {
+  }
+  LayoutResourceClass XBOX_SERIES : PC {
+  }
+  LayoutResourceClass PS4 : PC {
+  }
+  LayoutResourceClass PS5 : PC {
+  }
+  LayoutResourceClass HEADLESS : PC {
+  }
+ }
+}

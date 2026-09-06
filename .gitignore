@@ -1,18 +1,6 @@
 # Arma Reforger Workbench generated/local files
 resourceDatabase.rdb
-
-# Keep local/reference configs ignored, but allow the runtime configs shipped by this mod.
-Configs/*
-!Configs/System/
-Configs/System/*
-!Configs/System/chimeraInputCommon.conf
-!Configs/System/chimeraInputCommon.conf.meta
-!Configs/System/keyBindingMenu.conf
-!Configs/System/keyBindingMenu.conf.meta
-!Configs/System/chimeraMenus.conf
-!Configs/System/chimeraMenus.conf.meta
-
-# Local reference layouts
+Configs/
 UI/layouts/HUD/Notifications/
 
 # Common editor/OS files

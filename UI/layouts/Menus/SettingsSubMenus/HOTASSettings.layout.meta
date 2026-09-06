@@ -1,5 +1,5 @@
 MetaFileClass {
- Name "{267FA2655D58593F}UI/layouts/Menus/HOTAS/HOTASSettingsMenu.layout"
+ Name "{8C52D9F7A31B640E}UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout"
  Configurations {
   LayoutResourceClass PC {
   }

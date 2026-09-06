@@ -163,6 +163,8 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			array<ResourceName> emptyConfigs = {};
 			binding.SetCustomConfigs(emptyConfigs);
 			binding.Save();
+			RefreshSpinBoxArrows(component, index, m_UserConfigs.Count() + 1);
+			GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 			Print("[HOTAS Debugger] Custom HOTAS input config cleared from Settings", LogLevel.NORMAL);
 			return;
 		}
@@ -173,6 +175,8 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 
 		string selectedConfig = m_UserConfigs.Get(configIndex);
 		keybindModule.SelectJoystickPresetPath(selectedConfig);
+		RefreshSpinBoxArrows(component, index, m_UserConfigs.Count() + 1);
+		GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
 		Print(string.Format("[HOTAS Debugger] HOTAS input config selected from Settings: %1", selectedConfig), LogLevel.NORMAL);
 	}
 
@@ -389,17 +393,24 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 
 		SCR_PagingButtonComponent button = SCR_PagingButtonComponent.Cast(buttonWidget.FindHandler(SCR_PagingButtonComponent));
 		if (button)
+		{
+			button.SetDisabledOpacity(0.35);
 			button.SetEnabled(enabled, false);
+		}
 		else
+		{
 			buttonWidget.SetEnabled(enabled);
+			if (enabled)
+				buttonWidget.SetOpacity(1.0);
+			else
+				buttonWidget.SetOpacity(0.35);
+		}
 
 		// SCR_PagingButtonComponent hides BackgroundImage when disabled. For settings
 		// selectors we want the normal disabled/grey arrow instead of a disappearing one.
 		Widget background = buttonWidget.FindAnyWidget("BackgroundImage");
 		if (background)
 			background.SetVisible(true);
-
-		buttonWidget.SetOpacity(enabled ? 1.0 : 0.35);
 	}
 
 	//------------------------------------------------------------------------------------------------

@@ -490,8 +490,21 @@ class HOTASDebugController
 					direction = "+";
 				else if (axisText.EndsWith("-"))
 					direction = "-";
-				int axisNumber = axisText.ToInt() + 1;
-				readable = string.Format("AXIS %1%2", axisNumber, direction);
+
+				int rawAxis = axisText.ToInt();
+				string axisName;
+				switch (rawAxis)
+				{
+					case 0: axisName = "ROLL"; break;
+					case 1: axisName = "PITCH"; break;
+					case 2: axisName = "THROTTLE"; break;
+					case 5: axisName = "YAW"; break;
+				}
+
+				if (!axisName.IsEmpty())
+					readable = string.Format("%1 %2", axisName, direction);
+				else
+					readable = string.Format("AXIS %1%2", rawAxis + 1, direction);
 			}
 
 			if (!result.IsEmpty())

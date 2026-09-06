@@ -1,0 +1,34 @@
+name: Fix RichText Compile
+
+on:
+  push:
+    branches:
+      - fix/hud-style-and-background
+    paths:
+      - 'scripts/fix_richtext_compile.py'
+      - '.github/workflows/fix-richtext-compile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/hud-style-and-background
+      - run: python scripts/fix_richtext_compile.py
+      - run: |
+          grep -Fq '<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Fix RichText markup compile error"
+            git push origin HEAD:fix/hud-style-and-background
+          fi

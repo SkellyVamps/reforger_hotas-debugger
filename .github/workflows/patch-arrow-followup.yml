@@ -1,0 +1,38 @@
+name: Patch Arrow Follow-up
+
+on:
+  push:
+    branches:
+      - feature/exact-hud-position
+    paths:
+      - 'scripts/patch_arrow_followup.py'
+      - '.github/workflows/patch-arrow-followup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/exact-hud-position
+      - run: python scripts/patch_arrow_followup.py
+      - name: Validate patch
+        run: |
+          grep -q 'button.SetDisabledOpacity(0.35)' Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+          grep -q 'RefreshSpinBoxArrows(component, index, m_UserConfigs.Count() + 1)' Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+          ! grep -q 'buttonWidget.SetOpacity(enabled ?' Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+      - name: Commit generated changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Keep settings arrows visibly disabled"
+            git push origin HEAD:feature/exact-hud-position
+          fi

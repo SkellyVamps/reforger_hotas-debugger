@@ -7,6 +7,7 @@ class HOTASDebugController
 	protected TextWidget m_DebugText;
 	protected ref array<string> m_WatchedActions = {};
 	protected bool m_bInitialized;
+	protected bool m_bDebugMode = false;
 	protected int m_iEventCounter;
 
 	static HOTASDebugController GetInstance()
@@ -99,13 +100,36 @@ class HOTASDebugController
 			return;
 		}
 
+		int left;
+		int top;
+		int width;
+		int height;
+		int flags = WidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS | WidgetFlags.NO_LOCALIZATION;
+
+		if (m_bDebugMode)
+		{
+			left = 40;
+			top = 120;
+			width = 900;
+			height = 180;
+			flags |= WidgetFlags.WRAP_TEXT;
+		}
+		else
+		{
+			width = 900;
+			height = 92;
+			left = (workspace.GetWidth() - width) / 2;
+			top = workspace.GetHeight() - height - 70;
+			flags |= WidgetFlags.CENTER | WidgetFlags.VCENTER;
+		}
+
 		Widget widget = workspace.CreateWidgetInWorkspace(
 			WidgetType.TextWidgetTypeID,
-			40,
-			120,
-			900,
-			180,
-			WidgetFlags.VISIBLE | WidgetFlags.IGNORE_CURSOR | WidgetFlags.NOFOCUS | WidgetFlags.WRAP_TEXT,
+			left,
+			top,
+			width,
+			height,
+			flags,
 			Color.White,
 			1000
 		);
@@ -117,11 +141,23 @@ class HOTASDebugController
 			return;
 		}
 
-		m_DebugText.SetExactFontSize(24);
+		if (m_bDebugMode)
+		{
+			m_DebugText.SetExactFontSize(24);
+			m_DebugText.SetOutline(2, 0xFF000000);
+			m_DebugText.SetTextWrapping(true);
+			m_DebugText.SetText("HOTAS INPUT DEBUG\nWaiting for a watched input action...");
+		}
+		else
+		{
+			m_DebugText.SetExactFontSize(28);
+			m_DebugText.SetOutline(3, 0xE0000000);
+			m_DebugText.SetShadow(2, 0xB0000000, 1.0, 2, 2);
+			m_DebugText.SetTextWrapping(false);
+			m_DebugText.SetText("HOTAS INPUT HUD");
+		}
+
 		m_DebugText.SetBold(true);
-		m_DebugText.SetOutline(2, 0xFF000000);
-		m_DebugText.SetTextWrapping(true);
-		m_DebugText.SetText("HOTAS INPUT DEBUG\nWaiting for a watched input action...");
 	}
 
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
@@ -133,14 +169,22 @@ class HOTASDebugController
 
 		string bindingsText = GetJoystickBindings(actionName);
 		string readableAction = MakeReadableActionName(actionName);
-		string output = string.Format(
-			"HOTAS INPUT DEBUG  #%1\nInput: %2\nAction: %3\nRaw action: %4\nValue: %5",
-			m_iEventCounter,
-			bindingsText,
-			readableAction,
-			actionName,
-			value.ToString(2)
-		);
+		string output;
+		if (m_bDebugMode)
+		{
+			output = string.Format(
+				"HOTAS INPUT DEBUG  #%1\nInput: %2\nAction: %3\nRaw action: %4\nValue: %5",
+				m_iEventCounter,
+				bindingsText,
+				readableAction,
+				actionName,
+				value.ToString(2)
+			);
+		}
+		else
+		{
+			output = string.Format("%1   |   %2", bindingsText, readableAction);
+		}
 
 		if (m_DebugText)
 			m_DebugText.SetText(output);

@@ -1,0 +1,38 @@
+name: Patch Editable HUD Layout
+
+on:
+  push:
+    branches:
+      - feature/editable-hud-layout
+    paths:
+      - 'scripts/patch_editable_hud_layout.py'
+      - '.github/workflows/patch-editable-hud-layout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/editable-hud-layout
+      - run: python scripts/patch_editable_hud_layout.py
+      - run: |
+          grep -q '25F3F1C1A41EA7E1' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q 'FindAnyWidget("InputText")' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q 'FindAnyWidget("SeparatorText")' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q 'FindAnyWidget("ActionText")' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          grep -q 'Using Workbench-editable HOTASInputHUD.layout' Scripts/Game/HOTASDebugger/HOTASDebugger.c
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASDebugger.c
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Load editable HOTAS HUD layout"
+            git push origin HEAD:feature/editable-hud-layout
+          fi

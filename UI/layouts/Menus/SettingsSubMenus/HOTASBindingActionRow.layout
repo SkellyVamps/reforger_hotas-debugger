@@ -1,0 +1,84 @@
+ButtonWidgetClass "{B45D7E926AF13C81}" {
+ Name "HOTASBindingRow"
+ Slot LayoutSlot "{B45D7E926AF13C82}" {
+  Padding 0 2 0 2
+  SizeMode Fill
+ }
+ {
+  SizeLayoutWidgetClass "{B45D7E926AF13C83}" {
+   Name "RowSize"
+   Slot AlignableSlot "{B45D7E926AF13C84}" {
+    HorizontalAlign 3
+    VerticalAlign 3
+   }
+   AllowHeightOverride 1
+   HeightOverride 54
+   {
+    OverlayWidgetClass "{B45D7E926AF13C85}" {
+     Name "RowOverlay"
+     Slot AlignableSlot "{B45D7E926AF13C86}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      ImageWidgetClass "{B45D7E926AF13C87}" {
+       Name "RowBackground"
+       Slot OverlayWidgetSlot "{B45D7E926AF13C88}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Color 0.018 0.031 0.031 0.82
+      }
+      ImageWidgetClass "{B45D7E926AF13C89}" {
+       Name "RowSelection"
+       Slot OverlayWidgetSlot "{B45D7E926AF13C8A}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Color 0.761 0.392 0.078 0.55
+       Opacity 0
+      }
+      HorizontalLayoutWidgetClass "{B45D7E926AF13C8B}" {
+       Name "RowContent"
+       Slot OverlayWidgetSlot "{B45D7E926AF13C8C}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+        Padding 22 0 18 0
+       }
+       {
+        TextWidgetClass "{B45D7E926AF13C8D}" {
+         Name "ActionName"
+         Slot LayoutSlot "{B45D7E926AF13C8E}" {
+          SizeMode Fill
+          FillWeight 1.45
+         }
+         Text "Action"
+         "Font Size" 20
+         "Min Font Size" 16
+         FontProperties FontProperties "{B45D7E926AF13C8F}" {
+          Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+         }
+        }
+        TextWidgetClass "{B45D7E926AF13C90}" {
+         Name "BindingValue"
+         Slot LayoutSlot "{B45D7E926AF13C91}" {
+          SizeMode Fill
+          FillWeight 1
+         }
+         Color 0.92 0.65 0.25 1
+         Text "Unassigned"
+         "Font Size" 18
+         "Min Font Size" 14
+         Wrap 0
+         FontProperties FontProperties "{B45D7E926AF13C92}" {
+          Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

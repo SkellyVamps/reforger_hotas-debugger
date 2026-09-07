@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{6CA52592FD16D476}UI/layouts/Menus/SettingsSubMenus/HOTASPreviewExtras.layout"
+ Configurations {
+  LayoutResourceClass PC {
+  }
+  LayoutResourceClass XBOX_ONE : PC {
+  }
+  LayoutResourceClass XBOX_SERIES : PC {
+  }
+  LayoutResourceClass PS4 : PC {
+  }
+  LayoutResourceClass PS5 : PC {
+  }
+  LayoutResourceClass HEADLESS : PC {
+  }
+ }
+}

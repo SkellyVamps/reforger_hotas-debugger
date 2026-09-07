@@ -7,6 +7,30 @@ modded class HOTASDebugController
 	protected string m_sLiveInputRaw = "Press or move a bound HOTAS control while in a supported vehicle.";
 
 	//------------------------------------------------------------------------------------------------
+	// When no settings file exists yet, let the base controller create its normal defaults,
+	// then apply the player-facing label defaults used by the current settings UI.
+	// Existing files are left untouched so user-customized labels are never overwritten.
+	override protected void LoadHudSettings()
+	{
+		bool settingsFileMissing = !FileIO.FileExists("$profile:HOTASHudSettings.txt");
+		super.LoadHudSettings();
+
+		if (!settingsFileMissing)
+			return;
+
+		m_sRollAxisLabel = "Roll";
+		m_sPitchAxisLabel = "Pitch";
+		m_sThrottleAxisLabel = "Throttle";
+		m_sYawAxisLabel = "Yaw";
+		m_sFreelookUpLabel = "Thumb Up";
+		m_sFreelookDownLabel = "Thumb Down";
+		m_sFreelookRightLabel = "Thumb Right";
+		m_sFreelookLeftLabel = "Thumb Left";
+
+		SaveHudSettings();
+	}
+
+	//------------------------------------------------------------------------------------------------
 	void ResetHudPresentationSettings()
 	{
 		m_bHudEnabled = true;
@@ -31,10 +55,10 @@ modded class HOTASDebugController
 		m_sPitchAxisLabel = "Pitch";
 		m_sThrottleAxisLabel = "Throttle";
 		m_sYawAxisLabel = "Yaw";
-		m_sFreelookUpLabel = string.Empty;
-		m_sFreelookDownLabel = string.Empty;
-		m_sFreelookRightLabel = string.Empty;
-		m_sFreelookLeftLabel = string.Empty;
+		m_sFreelookUpLabel = "Thumb Up";
+		m_sFreelookDownLabel = "Thumb Down";
+		m_sFreelookRightLabel = "Thumb Right";
+		m_sFreelookLeftLabel = "Thumb Left";
 
 		SaveHudSettings();
 	}

@@ -151,7 +151,6 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
        Slot LayoutSlot "{A7B3D419C82E6F47}" {
         Padding 0 2 0 4
        }
-       Visible 0
        components {
         SCR_ButtonTextComponent "{A7B3D419C82E6F48}" {
          m_sText "Cancel Input Capture (Esc)"
@@ -164,7 +163,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
         Padding 0 4 0 10
        }
        AllowHeightOverride 1
-       HeightOverride 76
+       HeightOverride 96
        {
         OverlayWidgetClass "{A7B3D419C82E6F4B}" {
          Name "EditorStatusOverlay"
@@ -186,7 +185,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
            Slot OverlayWidgetSlot "{A7B3D419C82E6F4A1}" {
             HorizontalAlign 3
             VerticalAlign 3
-            Padding 10 6 10 6
+            Padding 10 8 10 8
            }
            Color 0.94 0.94 0.9 1
            Text "Ready."
@@ -194,7 +193,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
            "Min Font Size" 13
            Wrap 1
            "Vertical Alignment" Center
-           "Line Spacing" 65
+           "Line Spacing" 70
           }
          }
         }

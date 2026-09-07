@@ -10,13 +10,11 @@ modded class HOTASSettingsSubMenu
 	protected Widget m_PreviewExtrasRoot;
 	protected SCR_ButtonTextComponent m_PreviewDayButton;
 	protected SCR_ButtonTextComponent m_PreviewNightButton;
-	protected RichTextWidget m_LiveInputReadable;
-	protected TextWidget m_LiveInputRaw;
-	protected int m_iLastLiveInputRevision = -1;
 
 	protected ImageWidget m_ScreenPreviewImage;
 	protected Widget m_PreviewHudVisualRoot;
 	protected Widget m_PreviewHudBackground;
+	protected Widget m_PreviewHudContent;
 	protected RichTextWidget m_PreviewHudInput;
 	protected RichTextWidget m_PreviewHudSeparator;
 	protected RichTextWidget m_PreviewHudAction;
@@ -28,7 +26,7 @@ modded class HOTASSettingsSubMenu
 	{
 		super.OnTabCreate(menuRoot, buttonsLayout, index);
 		SetupResetButtons();
-		SetupLiveInputTester();
+		SetupPreviewControls();
 		SetupEnhancedHudPreview();
 	}
 
@@ -36,21 +34,7 @@ modded class HOTASSettingsSubMenu
 	override void OnTabShow()
 	{
 		super.OnTabShow();
-
-		HOTASDebugController.GetInstance().SetLiveInputTesterActive(true);
-		m_iLastLiveInputRevision = -1;
-		UpdateLiveInputTester();
-		GetGame().GetCallqueue().Remove(UpdateLiveInputTester);
-		GetGame().GetCallqueue().CallLater(UpdateLiveInputTester, 100, true);
 		UpdateHudPositionPreview();
-	}
-
-	//------------------------------------------------------------------------------------------------
-	override void OnTabHide()
-	{
-		HOTASDebugController.GetInstance().SetLiveInputTesterActive(false);
-		GetGame().GetCallqueue().Remove(UpdateLiveInputTester);
-		super.OnTabHide();
 	}
 
 	// Persist editable labels as the text changes. OnConfirm remains registered by the
@@ -102,7 +86,7 @@ modded class HOTASSettingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
-	protected void SetupLiveInputTester()
+	protected void SetupPreviewControls()
 	{
 		Widget previewPane = m_wRoot.FindAnyWidget("HUDPreviewPane");
 		if (!previewPane)
@@ -115,9 +99,15 @@ modded class HOTASSettingsSubMenu
 		if (!m_PreviewExtrasRoot)
 			return;
 
-		m_LiveInputReadable = RichTextWidget.Cast(m_PreviewExtrasRoot.FindAnyWidget("LiveInputReadable"));
-		m_LiveInputRaw = TextWidget.Cast(m_PreviewExtrasRoot.FindAnyWidget("LiveInputRaw"));
-		UpdateLiveInputTester();
+		m_PreviewDayButton = SCR_ButtonTextComponent.GetButtonText("PreviewDay", m_PreviewExtrasRoot);
+		if (m_PreviewDayButton)
+			m_PreviewDayButton.m_OnClicked.Insert(OnPreviewDayClicked);
+
+		m_PreviewNightButton = SCR_ButtonTextComponent.GetButtonText("PreviewNight", m_PreviewExtrasRoot);
+		if (m_PreviewNightButton)
+			m_PreviewNightButton.m_OnClicked.Insert(OnPreviewNightClicked);
+
+		UpdatePreviewLightingButtons();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -141,6 +131,11 @@ modded class HOTASSettingsSubMenu
 
 		if (m_HudPositionPreview)
 		{
+			// The ButtonWidget is kept only as the drag hit target. Its own visual must be
+			// transparent or its default white fill shows through the HUD background and makes
+			// opacity settings look much brighter than they do in gameplay.
+			m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
+
 			m_PreviewHudVisualRoot = GetGame().GetWorkspace().CreateWidgets(
 				"{B87F439E5C1A02D6}UI/layouts/HUD/HOTAS/HOTASHudPreviewSample.layout",
 				m_HudPositionPreview
@@ -148,45 +143,20 @@ modded class HOTASSettingsSubMenu
 
 			if (m_PreviewHudVisualRoot)
 			{
+				// Prevent the transparent drag button color from tinting the actual HUD sample.
+				m_PreviewHudVisualRoot.SetIsColorInherited(false);
 				LayoutSlot.SetHorizontalAlign(m_PreviewHudVisualRoot, LayoutHorizontalAlign.Stretch);
 				LayoutSlot.SetVerticalAlign(m_PreviewHudVisualRoot, LayoutVerticalAlign.Stretch);
 
 				m_PreviewHudBackground = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudBackground");
+				m_PreviewHudContent = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudContent");
 				m_PreviewHudInput = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudInput"));
 				m_PreviewHudSeparator = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudSeparator"));
 				m_PreviewHudAction = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudAction"));
 			}
 		}
 
-		if (m_PreviewExtrasRoot)
-		{
-			m_PreviewDayButton = SCR_ButtonTextComponent.GetButtonText("PreviewDay", m_PreviewExtrasRoot);
-			if (m_PreviewDayButton)
-				m_PreviewDayButton.m_OnClicked.Insert(OnPreviewDayClicked);
-
-			m_PreviewNightButton = SCR_ButtonTextComponent.GetButtonText("PreviewNight", m_PreviewExtrasRoot);
-			if (m_PreviewNightButton)
-				m_PreviewNightButton.m_OnClicked.Insert(OnPreviewNightClicked);
-		}
-
-		UpdatePreviewLightingButtons();
 		UpdateHudPositionPreview();
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void UpdateLiveInputTester()
-	{
-		if (!m_LiveInputReadable || !m_LiveInputRaw)
-			return;
-
-		HOTASDebugController controller = HOTASDebugController.GetInstance();
-		int revision = controller.GetLiveInputRevision();
-		if (revision == m_iLastLiveInputRevision)
-			return;
-
-		m_iLastLiveInputRevision = revision;
-		m_LiveInputReadable.SetText(controller.GetLiveInputReadable());
-		m_LiveInputRaw.SetText(controller.GetLiveInputRaw());
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -245,14 +215,15 @@ modded class HOTASSettingsSubMenu
 			m_ScreenPreviewImage.SetOpacity(1.0);
 		}
 
+		// Keep the invisible drag hit target transparent even after the base preview updates.
+		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
 		UpdatePreviewHudAppearance(workspace);
 	}
 
 	//------------------------------------------------------------------------------------------------
 	// The base settings tab intentionally used a centered square as a generic position diagram.
-	// With real cockpit screenshots available, use almost the entire preview host instead. This
-	// makes the reference image roughly twice as large on widescreen displays while preserving
-	// the player's actual screen aspect ratio and normalized HUD position.
+	// With real cockpit screenshots available, use almost the entire preview host instead while
+	// preserving the player's actual screen aspect ratio and normalized HUD position.
 	protected void ExpandPreviewToHost(WorkspaceWidget workspace, float screenWidth, float screenHeight)
 	{
 		if (!m_PreviewHost || !m_PreviewSquare || !m_PreviewSquareBackground || !m_ScreenPreview || !m_ScreenPreviewBackground || !m_HudPositionPreview)
@@ -371,30 +342,30 @@ modded class HOTASSettingsSubMenu
 	{
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
 
+		// This is the same background color used by HOTASInputHUD.layout. Only its opacity
+		// changes here, exactly matching the user's Background and Background Opacity settings.
 		if (m_PreviewHudBackground)
 		{
+			m_PreviewHudBackground.SetColor(Color.FromInt(0xFF010202));
 			if (controller.IsHudBackgroundEnabled())
 				m_PreviewHudBackground.SetOpacity(controller.GetHudBackgroundOpacity());
 			else
 				m_PreviewHudBackground.SetOpacity(0.0);
 		}
 
-		string inputLabel = controller.GetAxisCustomLabel(0);
-		if (inputLabel.IsEmpty())
-			inputLabel = "Roll";
-
 		if (m_PreviewHudInput)
-			m_PreviewHudInput.SetText(inputLabel + " +");
+			m_PreviewHudInput.SetText(controller.GetPitchForwardPreviewInput());
 		if (m_PreviewHudSeparator)
 			m_PreviewHudSeparator.SetText("|");
 		if (m_PreviewHudAction)
-			m_PreviewHudAction.SetText("Cyclic Right");
+			m_PreviewHudAction.SetText("Cyclic Forward");
 
 		float previewWidthPx;
 		float previewHeightPx;
 		m_HudPositionPreview.GetScreenSize(previewWidthPx, previewHeightPx);
 		float previewHeight = workspace.DPIUnscale(previewHeightPx);
-		int previewFontSize = Math.Round(previewHeight * (26.0 / 70.0));
+		float previewScale = previewHeight / 70.0;
+		int previewFontSize = Math.Round(26.0 * previewScale);
 		if (previewFontSize < 6)
 			previewFontSize = 6;
 
@@ -404,6 +375,15 @@ modded class HOTASSettingsSubMenu
 			m_PreviewHudSeparator.SetExactFontSize(previewFontSize);
 		if (m_PreviewHudAction)
 			m_PreviewHudAction.SetExactFontSize(previewFontSize);
+
+		// Match the real HUD's 15px content padding and 5px separator spacing at 1.0 scale,
+		// scaled down proportionally to the miniature preview.
+		float contentPadding = Math.Max(1.0, 15.0 * previewScale);
+		float separatorPadding = Math.Max(1.0, 5.0 * previewScale);
+		if (m_PreviewHudContent)
+			LayoutSlot.SetPadding(m_PreviewHudContent, contentPadding, contentPadding, contentPadding, contentPadding);
+		if (m_PreviewHudSeparator)
+			LayoutSlot.SetPadding(m_PreviewHudSeparator, separatorPadding, 0, separatorPadding, 0);
 
 		if (controller.IsHudEnabled())
 			m_HudPositionPreview.SetOpacity(1.0);

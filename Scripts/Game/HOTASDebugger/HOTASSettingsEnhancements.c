@@ -1,9 +1,10 @@
 //------------------------------------------------------------------------------------------------
-// Ensure custom HOTAS HUD labels are persisted even when the user leaves an edit box
-// without explicitly confirming it with Enter. SCR_EditBoxComponent fires m_OnChanged
-// with the same (component, text) arguments used by m_OnConfirm.
+// HOTAS settings-menu extensions that do not belong in the core HUD/controller implementation.
+// Keep UI-only behavior here so HOTASSettingsTab.c can remain focused on the base settings tab.
 modded class HOTASSettingsSubMenu
 {
+	// Persist editable labels as the text changes. OnConfirm remains registered by the
+	// base tab as a fallback for keyboard/controller confirmation.
 	override protected void SetupAxisLabelEditors()
 	{
 		super.SetupAxisLabelEditors();

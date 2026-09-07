@@ -1,4 +1,4 @@
-ButtonWidgetClass "{B45D7E926AF13C81}" {
+OverlayWidgetClass "{B45D7E926AF13C81}" {
  Name "HOTASBindingRow"
  Slot LayoutSlot "{B45D7E926AF13C82}" {
   Padding 0 2 0 2
@@ -7,7 +7,7 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
  {
   SizeLayoutWidgetClass "{B45D7E926AF13C83}" {
    Name "RowSize"
-   Slot AlignableSlot "{B45D7E926AF13C84}" {
+   Slot OverlayWidgetSlot "{B45D7E926AF13C84}" {
     HorizontalAlign 3
     VerticalAlign 3
    }
@@ -27,7 +27,7 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
         HorizontalAlign 3
         VerticalAlign 3
        }
-       Color 0.018 0.031 0.031 0.82
+       Color 0.018 0.024 0.028 0.78
       }
       ImageWidgetClass "{B45D7E926AF13C89}" {
        Name "RowSelection"
@@ -35,7 +35,7 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
         HorizontalAlign 3
         VerticalAlign 3
        }
-       Color 0.761 0.392 0.078 0.55
+       Color 0.761 0.392 0.078 0.52
        Opacity 0
       }
       HorizontalLayoutWidgetClass "{B45D7E926AF13C8B}" {
@@ -43,150 +43,162 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
        Slot OverlayWidgetSlot "{B45D7E926AF13C8C}" {
         HorizontalAlign 3
         VerticalAlign 3
-        Padding 22 0 10 0
+        Padding 16 0 8 0
        }
        {
-        TextWidgetClass "{B45D7E926AF13C8D}" {
-         Name "ActionName"
+        OverlayWidgetClass "{B45D7E926AF13C8D}" {
+         Name "ActionCell"
          Slot LayoutSlot "{B45D7E926AF13C8E}" {
-          VerticalAlign 1
+          VerticalAlign 3
           SizeMode Fill
           FillWeight 1.45
          }
-         Text "Action"
-         "Font Size" 20
-         "Min Font Size" 16
-         "Vertical Alignment" Center
-         FontProperties FontProperties "{B45D7E926AF13C8F}" {
-          Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+         {
+          TextWidgetClass "{B45D7E926AF13C8F}" {
+           Name "ActionName"
+           Slot OverlayWidgetSlot "{B45D7E926AF13C90}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+            Padding 0 0 8 0
+           }
+           Text "Action"
+           "Font Size" 20
+           "Min Font Size" 16
+           "Vertical Alignment" Center
+           FontProperties FontProperties "{B45D7E926AF13C91}" {
+            Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+           }
+          }
+          ButtonWidgetClass "{B45D7E926AF13C92}" {
+           Name "ActionSelectButton"
+           Slot OverlayWidgetSlot "{B45D7E926AF13C93}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+           }
+           Color 1 1 1 0
+          }
          }
         }
-        ButtonWidgetClass "{B45D7E926AF13C90}" {
-         Name "BindingButton"
-         Slot LayoutSlot "{B45D7E926AF13C91}" {
-          VerticalAlign 1
+        OverlayWidgetClass "{B45D7E926AF13C94}" {
+         Name "BindingCell"
+         Slot LayoutSlot "{B45D7E926AF13C95}" {
+          VerticalAlign 3
           Padding 2 5 6 5
           SizeMode Fill
           FillWeight 1
          }
          {
-          ImageWidgetClass "{B45D7E926AF13C92}" {
+          ImageWidgetClass "{B45D7E926AF13C96}" {
            Name "BindingBackground"
-           Slot AlignableSlot "{B45D7E926AF13C93}" {
+           Slot OverlayWidgetSlot "{B45D7E926AF13C97}" {
             HorizontalAlign 3
             VerticalAlign 3
            }
-           Color 0.03 0.045 0.045 0.82
+           Color 0.008 0.012 0.015 0.86
           }
-          TextWidgetClass "{B45D7E926AF13C94}" {
+          TextWidgetClass "{B45D7E926AF13C98}" {
            Name "BindingValue"
-           Slot AlignableSlot "{B45D7E926AF13C95}" {
+           Slot OverlayWidgetSlot "{B45D7E926AF13C99}" {
             HorizontalAlign 3
             VerticalAlign 3
             Padding 10 0 10 0
            }
-           Color 0.92 0.65 0.25 1
+           Color 1 0.79 0.38 1
            Text "Unassigned"
            "Font Size" 18
            "Min Font Size" 14
            "Horizontal Alignment" Center
            "Vertical Alignment" Center
            Wrap 0
-           FontProperties FontProperties "{B45D7E926AF13C96}" {
+           FontProperties FontProperties "{B45D7E926AF13C9A}" {
             Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
            }
           }
+          ButtonWidgetClass "{B45D7E926AF13C9B}" {
+           Name "BindingButton"
+           Slot OverlayWidgetSlot "{B45D7E926AF13C9C}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+           }
+           Color 1 1 1 0
+          }
          }
         }
-        ButtonWidgetClass "{B45D7E926AF13CA0}" {
-         Name "ClearBindingButton"
+        SizeLayoutWidgetClass "{B45D7E926AF13CA0}" {
+         Name "ClearButtonSize"
          Slot LayoutSlot "{B45D7E926AF13CA1}" {
           VerticalAlign 1
           Padding 2 5 0 5
          }
+         AllowWidthOverride 1
+         WidthOverride 42
+         AllowHeightOverride 1
+         HeightOverride 42
          {
-          SizeLayoutWidgetClass "{B45D7E926AF13CA2}" {
-           Name "ClearButtonSize"
+          OverlayWidgetClass "{B45D7E926AF13CA2}" {
+           Name "ClearOverlay"
            Slot AlignableSlot "{B45D7E926AF13CA3}" {
-            HorizontalAlign 1
-            VerticalAlign 1
+            HorizontalAlign 3
+            VerticalAlign 3
            }
-           AllowWidthOverride 1
-           WidthOverride 42
-           AllowHeightOverride 1
-           HeightOverride 42
            {
-            OverlayWidgetClass "{B45D7E926AF13CA4}" {
-             Name "ClearOverlay"
-             Slot AlignableSlot "{B45D7E926AF13CA5}" {
+            ImageWidgetClass "{B45D7E926AF13CA4}" {
+             Name "ClearBackground"
+             Slot OverlayWidgetSlot "{B45D7E926AF13CA5}" {
               HorizontalAlign 3
               VerticalAlign 3
              }
+             Color 0.82 0.82 0.78 0.92
+            }
+            FrameWidgetClass "{B45D7E926AF13CA6}" {
+             Name "TrashIcon"
+             Slot OverlayWidgetSlot "{B45D7E926AF13CA7}" {
+              HorizontalAlign 1
+              VerticalAlign 1
+             }
              {
-              ImageWidgetClass "{B45D7E926AF13CA6}" {
-               Name "ClearBackground"
-               Slot OverlayWidgetSlot "{B45D7E926AF13CA7}" {
-                HorizontalAlign 3
-                VerticalAlign 3
+              ImageWidgetClass "{B45D7E926AF13CA8}" {
+               Name "TrashBody"
+               Slot FrameWidgetSlot "{B45D7E926AF13CA9}" {
+                PositionX 12
+                PositionY 15
+                SizeX 18
+                SizeY 18
+                Alignment 0 0
                }
-               Color 0.03 0.045 0.045 0.82
+               Color 0.03 0.03 0.03 1
               }
-              SizeLayoutWidgetClass "{B45D7E926AF13CB0}" {
-               Name "TrashIconSize"
-               Slot OverlayWidgetSlot "{B45D7E926AF13CB1}" {
-                HorizontalAlign 1
-                VerticalAlign 1
+              ImageWidgetClass "{B45D7E926AF13CAA}" {
+               Name "TrashLid"
+               Slot FrameWidgetSlot "{B45D7E926AF13CAB}" {
+                PositionX 9
+                PositionY 11
+                SizeX 24
+                SizeY 3
+                Alignment 0 0
                }
-               AllowWidthOverride 1
-               WidthOverride 42
-               AllowHeightOverride 1
-               HeightOverride 42
-               {
-                FrameWidgetClass "{B45D7E926AF13CA8}" {
-                 Name "TrashIcon"
-                 Slot AlignableSlot "{B45D7E926AF13CA9}" {
-                  HorizontalAlign 3
-                  VerticalAlign 3
-                 }
-                 {
-                  ImageWidgetClass "{B45D7E926AF13CAA}" {
-                   Name "TrashBody"
-                   Slot FrameWidgetSlot "{B45D7E926AF13CAB}" {
-                    PositionX 12
-                    PositionY 15
-                    SizeX 18
-                    SizeY 18
-                    Alignment 0 0
-                   }
-                   Color 0.85 0.85 0.82 1
-                  }
-                  ImageWidgetClass "{B45D7E926AF13CAC}" {
-                   Name "TrashLid"
-                   Slot FrameWidgetSlot "{B45D7E926AF13CAD}" {
-                    PositionX 9
-                    PositionY 11
-                    SizeX 24
-                    SizeY 3
-                    Alignment 0 0
-                   }
-                   Color 0.85 0.85 0.82 1
-                  }
-                  ImageWidgetClass "{B45D7E926AF13CAE}" {
-                   Name "TrashHandle"
-                   Slot FrameWidgetSlot "{B45D7E926AF13CAF}" {
-                    PositionX 17
-                    PositionY 7
-                    SizeX 8
-                    SizeY 3
-                    Alignment 0 0
-                   }
-                   Color 0.85 0.85 0.82 1
-                  }
-                 }
-                }
+               Color 0.03 0.03 0.03 1
+              }
+              ImageWidgetClass "{B45D7E926AF13CAC}" {
+               Name "TrashHandle"
+               Slot FrameWidgetSlot "{B45D7E926AF13CAD}" {
+                PositionX 17
+                PositionY 7
+                SizeX 8
+                SizeY 3
+                Alignment 0 0
                }
+               Color 0.03 0.03 0.03 1
               }
              }
+            }
+            ButtonWidgetClass "{B45D7E926AF13CAE}" {
+             Name "ClearBindingButton"
+             Slot OverlayWidgetSlot "{B45D7E926AF13CAF}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+             Color 1 1 1 0
             }
            }
           }

@@ -107,7 +107,50 @@ modded class HOTASSettingsSubMenu
 		if (m_PreviewNightButton)
 			m_PreviewNightButton.m_OnClicked.Insert(OnPreviewNightClicked);
 
+		Widget buttonRow = m_PreviewExtrasRoot.FindAnyWidget("PreviewLightingButtons");
+		if (buttonRow)
+			LayoutSlot.SetSizeMode(buttonRow, LayoutSizeMode.Auto);
+
+		LimitPreviewLightingButtonHeight(m_PreviewDayButton);
+		LimitPreviewLightingButtonHeight(m_PreviewNightButton);
 		UpdatePreviewLightingButtons();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void LimitPreviewLightingButtonHeight(SCR_ButtonTextComponent button)
+	{
+		if (!button)
+			return;
+
+		SizeLayoutWidget sizeWidget = FindFirstSizeLayout(button.GetRootWidget());
+		if (!sizeWidget)
+			return;
+
+		sizeWidget.EnableHeightOverride(true);
+		sizeWidget.SetHeightOverride(76);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected SizeLayoutWidget FindFirstSizeLayout(Widget root)
+	{
+		if (!root)
+			return null;
+
+		SizeLayoutWidget sizeWidget = SizeLayoutWidget.Cast(root);
+		if (sizeWidget)
+			return sizeWidget;
+
+		Widget child = root.GetChildren();
+		while (child)
+		{
+			sizeWidget = FindFirstSizeLayout(child);
+			if (sizeWidget)
+				return sizeWidget;
+
+			child = child.GetSibling();
+		}
+
+		return null;
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -129,24 +172,23 @@ modded class HOTASSettingsSubMenu
 		if (oldPreviewFill)
 			oldPreviewFill.SetVisible(false);
 
-		if (m_HudPositionPreview)
+		if (m_HudPositionPreview && m_ScreenPreview)
 		{
-			// The ButtonWidget is kept only as the drag hit target. Its own visual must be
-			// transparent or its default white fill shows through the HUD background and makes
-			// opacity settings look much brighter than they do in gameplay.
+			// Keep the ButtonWidget only as the invisible drag hit target. The visible sample
+			// is a sibling in HUDScreenPreview so button tint/opacity cannot hide the HUD.
 			m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
+			m_HudPositionPreview.SetOpacity(1.0);
 
 			m_PreviewHudVisualRoot = GetGame().GetWorkspace().CreateWidgets(
 				"{B87F439E5C1A02D6}UI/layouts/HUD/HOTAS/HOTASHudPreviewSample.layout",
-				m_HudPositionPreview
+				m_ScreenPreview
 			);
 
 			if (m_PreviewHudVisualRoot)
 			{
-				// Prevent the transparent drag button color from tinting the actual HUD sample.
 				m_PreviewHudVisualRoot.SetIsColorInherited(false);
-				LayoutSlot.SetHorizontalAlign(m_PreviewHudVisualRoot, LayoutHorizontalAlign.Stretch);
-				LayoutSlot.SetVerticalAlign(m_PreviewHudVisualRoot, LayoutVerticalAlign.Stretch);
+				m_PreviewHudVisualRoot.SetZOrder(10);
+				m_HudPositionPreview.SetZOrder(20);
 
 				m_PreviewHudBackground = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudBackground");
 				m_PreviewHudContent = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudContent");
@@ -215,9 +257,41 @@ modded class HOTASSettingsSubMenu
 			m_ScreenPreviewImage.SetOpacity(1.0);
 		}
 
-		// Keep the invisible drag hit target transparent even after the base preview updates.
 		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
+		m_HudPositionPreview.SetOpacity(1.0);
+		SyncPreviewHudVisualToDragTarget(workspace);
 		UpdatePreviewHudAppearance(workspace);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SyncPreviewHudVisualToDragTarget(WorkspaceWidget workspace)
+	{
+		if (!workspace || !m_PreviewHudVisualRoot || !m_HudPositionPreview || !m_ScreenPreview)
+			return;
+
+		float targetX;
+		float targetY;
+		float screenX;
+		float screenY;
+		float targetWidth;
+		float targetHeight;
+		m_HudPositionPreview.GetScreenPos(targetX, targetY);
+		m_ScreenPreview.GetScreenPos(screenX, screenY);
+		m_HudPositionPreview.GetScreenSize(targetWidth, targetHeight);
+
+		FrameSlot.SetPos(
+			m_PreviewHudVisualRoot,
+			workspace.DPIUnscale(targetX - screenX),
+			workspace.DPIUnscale(targetY - screenY)
+		);
+		FrameSlot.SetSize(
+			m_PreviewHudVisualRoot,
+			workspace.DPIUnscale(targetWidth),
+			workspace.DPIUnscale(targetHeight)
+		);
+
+		m_PreviewHudVisualRoot.SetZOrder(10);
+		m_HudPositionPreview.SetZOrder(20);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -340,10 +414,13 @@ modded class HOTASSettingsSubMenu
 	//------------------------------------------------------------------------------------------------
 	protected void UpdatePreviewHudAppearance(WorkspaceWidget workspace)
 	{
+		if (!workspace || !m_PreviewHudVisualRoot)
+			return;
+
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
 
-		// This is the same background color used by HOTASInputHUD.layout. Only its opacity
-		// changes here, exactly matching the user's Background and Background Opacity settings.
+		// Match HOTASInputHUD.layout: text stays fully opaque while only the dark HUD
+		// background uses the configured Background Opacity value.
 		if (m_PreviewHudBackground)
 		{
 			m_PreviewHudBackground.SetColor(Color.FromInt(0xFF010202));
@@ -362,7 +439,7 @@ modded class HOTASSettingsSubMenu
 
 		float previewWidthPx;
 		float previewHeightPx;
-		m_HudPositionPreview.GetScreenSize(previewWidthPx, previewHeightPx);
+		m_PreviewHudVisualRoot.GetScreenSize(previewWidthPx, previewHeightPx);
 		float previewHeight = workspace.DPIUnscale(previewHeightPx);
 		float previewScale = previewHeight / 70.0;
 		int previewFontSize = Math.Round(26.0 * previewScale);
@@ -376,8 +453,6 @@ modded class HOTASSettingsSubMenu
 		if (m_PreviewHudAction)
 			m_PreviewHudAction.SetExactFontSize(previewFontSize);
 
-		// Match the real HUD's 15px content padding and 5px separator spacing at 1.0 scale,
-		// scaled down proportionally to the miniature preview.
 		float contentPadding = Math.Max(1.0, 15.0 * previewScale);
 		float separatorPadding = Math.Max(1.0, 5.0 * previewScale);
 		if (m_PreviewHudContent)
@@ -386,9 +461,12 @@ modded class HOTASSettingsSubMenu
 			LayoutSlot.SetPadding(m_PreviewHudSeparator, separatorPadding, 0, separatorPadding, 0);
 
 		if (controller.IsHudEnabled())
-			m_HudPositionPreview.SetOpacity(1.0);
+			m_PreviewHudVisualRoot.SetOpacity(1.0);
 		else
-			m_HudPositionPreview.SetOpacity(0.35);
+			m_PreviewHudVisualRoot.SetOpacity(0.35);
+
+		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
+		m_HudPositionPreview.SetOpacity(1.0);
 	}
 
 	//------------------------------------------------------------------------------------------------

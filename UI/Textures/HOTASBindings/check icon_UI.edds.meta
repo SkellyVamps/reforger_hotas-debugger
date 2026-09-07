@@ -1,5 +1,5 @@
 MetaFileClass {
- Name "{8CF4959EFB908E90}UI/Textures/HOTASBindings/trash-can-icon_UI.edds"
+ Name "{CEE6E861DB399E61}UI/Textures/HOTASBindings/check icon_UI.edds"
  Configurations {
   JPGResourceClass PC : "{3549C665CAA9A8EA}Configs/System/ResourceTypes/PC/TextureUI.conf" {
   }

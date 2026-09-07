@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{1931E32D83AD6178}UI/Textures/HOTASBindings/trash-can-icon_UI_Mask.edds"
+ Configurations {
+  JPGResourceClass PC : "{2231C67ACC4BB0AC}Configs/System/ResourceTypes/PC/TextureMask.conf" {
+  }
+  JPGResourceClass XBOX_ONE : "{3B78A666261DD8B4}Configs/System/ResourceTypes/XBOX_ONE/TextureMask.conf" {
+  }
+  JPGResourceClass XBOX_SERIES : "{9A79E1F659B378E7}Configs/System/ResourceTypes/XBOX_SERIES/TextureMask.conf" {
+  }
+  JPGResourceClass PS4 : "{5CB64ED6EEBDE368}Configs/System/ResourceTypes/PS4/TextureMask.conf" {
+  }
+  JPGResourceClass PS5 : "{64796311C22F7B3C}Configs/System/ResourceTypes/PS5/TextureMask.conf" {
+  }
+  JPGResourceClass HEADLESS : "{0B025DFAF55852CD}Configs/System/ResourceTypes/HEADLESS/TextureMask.conf" {
+  }
+ }
+}

@@ -1,4 +1,4 @@
-OverlayWidgetClass "{B45D7E926AF13C81}" {
+OverlayWidgetClass {
  Name "HOTASBindingRow"
  Slot LayoutSlot "{B45D7E926AF13C82}" {
   Padding 0 2 0 2
@@ -35,8 +35,8 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
         HorizontalAlign 3
         VerticalAlign 3
        }
-       Color 0.761 0.392 0.078 0.52
        Opacity 0
+       Color 0.761 0.392 0.078 0.52
       }
       HorizontalLayoutWidgetClass "{B45D7E926AF13C8B}" {
        Name "RowContent"
@@ -132,8 +132,8 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
               HorizontalAlign 3
               VerticalAlign 3
              }
-             Color 1 1 1 1
              Opacity 0
+             Color 1 1 1 1
              Texture "{5CF471573DD34EDF}UI/Textures/HOTASBindings/check-icon_UI.edds"
              Image ""
              Size 128 128
@@ -194,9 +194,13 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
                 VerticalAlign 3
                }
                Color 1 1 1 1
-               Texture "{F7CBD7CE76D1FC48}UI/Textures/HOTASBindings/trash-can-icon_UI.edds"
-               Image ""
-               Size 128 128
+               Texture "{8CF4959EFB908E90}UI/Textures/HOTASBindings/trash-can-icon_UI.edds"
+               Size 1280 1280
+               "Blend Mode" Additive
+               Filter 0
+               Mask "{1931E32D83AD6178}UI/Textures/HOTASBindings/trash-can-icon_UI_Mask.edds"
+               "Transition width" 1
+               "Mask Mode" "Exclude Range"
               }
              }
             }

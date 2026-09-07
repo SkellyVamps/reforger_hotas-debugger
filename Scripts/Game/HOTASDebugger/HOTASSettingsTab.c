@@ -276,10 +276,11 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		float previewHudLeft = previewWidth * (hudLeft / screenWidth);
 		float previewHudTop = previewHeight * (hudTop / screenHeight);
 
-		if (previewHudWidth < 8)
-			previewHudWidth = 8;
-		if (previewHudHeight < 5)
-			previewHudHeight = 5;
+		// Keep the preview handle large enough to grab reliably with the mouse.
+		if (previewHudWidth < 20)
+			previewHudWidth = 20;
+		if (previewHudHeight < 12)
+			previewHudHeight = 12;
 
 		FrameSlot.SetPos(m_HudPositionPreview, previewHudLeft, previewHudTop);
 		FrameSlot.SetSize(m_HudPositionPreview, previewHudWidth, previewHudHeight);
@@ -381,8 +382,10 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		if (!root)
 			return;
 
-		RefreshArrowButton(root.FindAnyWidget("ButtonLeft"), selected > 0);
-		RefreshArrowButton(root.FindAnyWidget("ButtonRight"), selected < optionCount - 1);
+		// These selectors cycle, so both arrows stay visible whenever more than one option exists.
+		bool arrowsEnabled = optionCount > 1;
+		RefreshArrowButton(root.FindAnyWidget("ButtonLeft"), arrowsEnabled);
+		RefreshArrowButton(root.FindAnyWidget("ButtonRight"), arrowsEnabled);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -400,17 +403,28 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		else
 		{
 			buttonWidget.SetEnabled(enabled);
-			if (enabled)
-				buttonWidget.SetOpacity(1.0);
-			else
-				buttonWidget.SetOpacity(0.35);
 		}
 
-		// SCR_PagingButtonComponent hides BackgroundImage when disabled. For settings
-		// selectors we want the normal disabled/grey arrow instead of a disappearing one.
+		// Paging buttons hide their background when disabled. Force both visual layers
+		// back on after SetEnabled so the arrows never disappear from the settings row.
+		if (enabled)
+			buttonWidget.SetOpacity(1.0);
+		else
+			buttonWidget.SetOpacity(0.35);
+
 		Widget background = buttonWidget.FindAnyWidget("BackgroundImage");
 		if (background)
+		{
 			background.SetVisible(true);
+			background.SetOpacity(1.0);
+		}
+
+		Widget panel = buttonWidget.FindAnyWidget("Panel");
+		if (panel)
+		{
+			panel.SetVisible(true);
+			panel.SetOpacity(1.0);
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------

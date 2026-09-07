@@ -175,6 +175,50 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
         }
        }
       }
+      ButtonWidgetClass "{8C52D9F7A31B6448}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
+       Name "FreelookUpAxis"
+       Slot LayoutSlot "{8C52D9F7A31B6449}" { Padding 4 4 4 4 }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Free Look Up - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
+      }
+      ButtonWidgetClass "{8C52D9F7A31B644A}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
+       Name "FreelookDownAxis"
+       Slot LayoutSlot "{8C52D9F7A31B644B}" { Padding 4 4 4 4 }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Free Look Down - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
+      }
+      ButtonWidgetClass "{8C52D9F7A31B644C}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
+       Name "FreelookRightAxis"
+       Slot LayoutSlot "{8C52D9F7A31B644D}" { Padding 4 4 4 4 }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Free Look Right - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
+      }
+      ButtonWidgetClass "{8C52D9F7A31B644E}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
+       Name "FreelookLeftAxis"
+       Slot LayoutSlot "{8C52D9F7A31B644F}" { Padding 4 4 4 4 }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Free Look Left - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
+      }
       VerticalLayoutWidgetClass "{8C52D9F7A31B6444}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "TitleAdvanced"
        Slot LayoutSlot "{8C52D9F7A31B6445}" {

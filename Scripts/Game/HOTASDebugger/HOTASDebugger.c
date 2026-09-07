@@ -39,6 +39,14 @@ class HOTASDebugController
 	protected string m_sPitchAxisBinding;
 	protected string m_sThrottleAxisBinding;
 	protected string m_sYawAxisBinding;
+
+	// Direction-sensitive Free Look bindings. Unlike flight-axis bindings, keep the +/-
+	// direction because each thumbstick direction can have its own player-facing label.
+	protected string m_sFreelookUpAxisBinding;
+	protected string m_sFreelookDownAxisBinding;
+	protected string m_sFreelookRightAxisBinding;
+	protected string m_sFreelookLeftAxisBinding;
+
 	protected int m_iRollAxis = -1;
 	protected int m_iPitchAxis = -1;
 	protected int m_iThrottleAxis = -1;
@@ -49,6 +57,14 @@ class HOTASDebugController
 	protected string m_sPitchAxisLabel = "Pitch";
 	protected string m_sThrottleAxisLabel = "Throttle";
 	protected string m_sYawAxisLabel = "Yaw";
+
+	// Optional direction-specific Free Look labels. Empty means the HUD falls back to
+	// the normal raw AXIS N+/- display. These are deliberately user text rather than
+	// hardware assumptions so a hat, ministick, thumbstick, etc. can be named correctly.
+	protected string m_sFreelookUpLabel;
+	protected string m_sFreelookDownLabel;
+	protected string m_sFreelookRightLabel;
+	protected string m_sFreelookLeftLabel;
 
 	static HOTASDebugController GetInstance()
 	{
@@ -416,6 +432,11 @@ class HOTASDebugController
 				defaults.WriteLine("pitch_label=Pitch");
 				defaults.WriteLine("throttle_label=Throttle");
 				defaults.WriteLine("yaw_label=Yaw");
+				defaults.WriteLine("# Optional direction-specific Free Look labels. Leave blank to show the raw AXIS N+/- binding.");
+				defaults.WriteLine("freelook_up_label=");
+				defaults.WriteLine("freelook_down_label=");
+				defaults.WriteLine("freelook_right_label=");
+				defaults.WriteLine("freelook_left_label=");
 				defaults.Close();
 			}
 		}
@@ -462,6 +483,14 @@ class HOTASDebugController
 				m_sThrottleAxisLabel = value;
 			else if (key == "yaw_label")
 				m_sYawAxisLabel = value;
+			else if (key == "freelook_up_label")
+				m_sFreelookUpLabel = value;
+			else if (key == "freelook_down_label")
+				m_sFreelookDownLabel = value;
+			else if (key == "freelook_right_label")
+				m_sFreelookRightLabel = value;
+			else if (key == "freelook_left_label")
+				m_sFreelookLeftLabel = value;
 		}
 		file.Close();
 
@@ -496,6 +525,11 @@ class HOTASDebugController
 		file.WriteLine(string.Format("pitch_label=%1", m_sPitchAxisLabel));
 		file.WriteLine(string.Format("throttle_label=%1", m_sThrottleAxisLabel));
 		file.WriteLine(string.Format("yaw_label=%1", m_sYawAxisLabel));
+		file.WriteLine("# Optional direction-specific Free Look labels. Leave blank to show the raw AXIS N+/- binding.");
+		file.WriteLine(string.Format("freelook_up_label=%1", m_sFreelookUpLabel));
+		file.WriteLine(string.Format("freelook_down_label=%1", m_sFreelookDownLabel));
+		file.WriteLine(string.Format("freelook_right_label=%1", m_sFreelookRightLabel));
+		file.WriteLine(string.Format("freelook_left_label=%1", m_sFreelookLeftLabel));
 		file.Close();
 	}
 
@@ -572,6 +606,82 @@ class HOTASDebugController
 		SaveHudSettings();
 	}
 
+	string GetFreelookAssignmentDisplayName(int directionIndex)
+	{
+		string binding;
+		switch (directionIndex)
+		{
+			case 0: binding = m_sFreelookUpAxisBinding; break;
+			case 1: binding = m_sFreelookDownAxisBinding; break;
+			case 2: binding = m_sFreelookRightAxisBinding; break;
+			case 3: binding = m_sFreelookLeftAxisBinding; break;
+		}
+
+		int axisPos = binding.IndexOf(":axis");
+		if (axisPos < 0)
+			return "Unassigned";
+
+		string axisText = binding.Substring(axisPos + 5, binding.Length() - axisPos - 5);
+		string direction;
+		if (axisText.EndsWith("+"))
+		{
+			direction = "+";
+			axisText = axisText.Substring(0, axisText.Length() - 1);
+		}
+		else if (axisText.EndsWith("-"))
+		{
+			direction = "-";
+			axisText = axisText.Substring(0, axisText.Length() - 1);
+		}
+
+		int rawAxis = axisText.ToInt(-1);
+		if (rawAxis < 0)
+			return "Unassigned";
+
+		return string.Format("AXIS %1%2", rawAxis + 1, direction);
+	}
+
+	string GetFreelookSettingRowLabel(int directionIndex)
+	{
+		string logicalName;
+		switch (directionIndex)
+		{
+			case 0: logicalName = "Free Look Up"; break;
+			case 1: logicalName = "Free Look Down"; break;
+			case 2: logicalName = "Free Look Right"; break;
+			case 3: logicalName = "Free Look Left"; break;
+			default: logicalName = "Free Look"; break;
+		}
+
+		return string.Format("%1 - %2", logicalName, GetFreelookAssignmentDisplayName(directionIndex));
+	}
+
+	string GetFreelookCustomLabel(int directionIndex)
+	{
+		switch (directionIndex)
+		{
+			case 0: return m_sFreelookUpLabel;
+			case 1: return m_sFreelookDownLabel;
+			case 2: return m_sFreelookRightLabel;
+			case 3: return m_sFreelookLeftLabel;
+		}
+		return string.Empty;
+	}
+
+	void SetFreelookCustomLabel(int directionIndex, string value)
+	{
+		value = value.Trim();
+		switch (directionIndex)
+		{
+			case 0: m_sFreelookUpLabel = value; break;
+			case 1: m_sFreelookDownLabel = value; break;
+			case 2: m_sFreelookRightLabel = value; break;
+			case 3: m_sFreelookLeftLabel = value; break;
+			default: return;
+		}
+		SaveHudSettings();
+	}
+
 	protected string NormalizeAxisBinding(string binding)
 	{
 		int axisPos = binding.IndexOf(":axis");
@@ -610,6 +720,19 @@ class HOTASDebugController
 		return string.Empty;
 	}
 
+	protected string GetDirectionalAxisBindingFromAction(string actionName)
+	{
+		string bindingsText = GetJoystickBindings(actionName);
+		ref array<string> bindings = {};
+		bindingsText.Split(" / ", bindings, true);
+		foreach (string binding : bindings)
+		{
+			if (binding.IndexOf(":axis") >= 0)
+				return binding;
+		}
+		return string.Empty;
+	}
+
 	protected string ResolveAxisBindingFromActions(string actionA, string actionB, string actionC)
 	{
 		string binding = GetAxisBindingFromAction(actionA);
@@ -630,12 +753,18 @@ class HOTASDebugController
 		m_sThrottleAxisBinding = ResolveAxisBindingFromActions("PFC_ThrottleAxis", "HelicopterCollectiveIncrease", "HelicopterCollectiveDecrease");
 		m_sYawAxisBinding = ResolveAxisBindingFromActions("PFC_Yaw", "HelicopterAntiTorqueLeft", "HelicopterAntiTorqueRight");
 
+		m_sFreelookUpAxisBinding = GetDirectionalAxisBindingFromAction("FreelookUp");
+		m_sFreelookDownAxisBinding = GetDirectionalAxisBindingFromAction("FreelookDown");
+		m_sFreelookRightAxisBinding = GetDirectionalAxisBindingFromAction("FreelookRight");
+		m_sFreelookLeftAxisBinding = GetDirectionalAxisBindingFromAction("FreelookLeft");
+
 		m_iRollAxis = GetRawAxisFromBinding(m_sRollAxisBinding);
 		m_iPitchAxis = GetRawAxisFromBinding(m_sPitchAxisBinding);
 		m_iThrottleAxis = GetRawAxisFromBinding(m_sThrottleAxisBinding);
 		m_iYawAxis = GetRawAxisFromBinding(m_sYawAxisBinding);
 
 		Print(string.Format("[HOTAS Debugger] Config axis assignments: roll=%1 pitch=%2 throttle=%3 yaw=%4", GetAxisAssignmentDisplayName(0), GetAxisAssignmentDisplayName(1), GetAxisAssignmentDisplayName(2), GetAxisAssignmentDisplayName(3)), LogLevel.NORMAL);
+		Print(string.Format("[HOTAS Debugger] Free Look assignments: up=%1 down=%2 right=%3 left=%4", GetFreelookAssignmentDisplayName(0), GetFreelookAssignmentDisplayName(1), GetFreelookAssignmentDisplayName(2), GetFreelookAssignmentDisplayName(3)), LogLevel.NORMAL);
 	}
 
 	// Settings-tab slider values are human-facing percentages. HUD scale maps
@@ -1142,14 +1271,14 @@ class HOTASDebugController
 		}
 		else if (m_bUsingLayoutHud)
 		{
-			m_InputText.SetText(MakeReadableBinding(bindingsText));
+			m_InputText.SetText(MakeReadableBinding(bindingsText, actionName));
 			m_SeparatorText.SetText("|");
 			m_ActionText.SetText(readableAction);
 			ShowHud();
 		}
 		else if (m_DebugText)
 		{
-			string output = string.Format("<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>", MakeReadableBinding(bindingsText), readableAction);
+			string output = string.Format("<color rgba=\"226,167,80,255\">%1</color> | <color rgba=\"255,255,255,255\">%2</color>", MakeReadableBinding(bindingsText, actionName), readableAction);
 			m_DebugText.SetText(output);
 			ShowHud();
 		}
@@ -1233,7 +1362,19 @@ class HOTASDebugController
 		return joystickBindings;
 	}
 
-	protected string MakeReadableBinding(string bindingsText)
+	protected string GetFreelookLabelForAction(string actionName)
+	{
+		switch (actionName)
+		{
+			case "FreelookUp": return m_sFreelookUpLabel;
+			case "FreelookDown": return m_sFreelookDownLabel;
+			case "FreelookRight": return m_sFreelookRightLabel;
+			case "FreelookLeft": return m_sFreelookLeftLabel;
+		}
+		return string.Empty;
+	}
+
+	protected string MakeReadableBinding(string bindingsText, string actionName = string.Empty)
 	{
 		ref array<string> bindings = {};
 		bindingsText.Split(" / ", bindings, true);
@@ -1260,8 +1401,12 @@ class HOTASDebugController
 
 				int rawAxis = axisText.ToInt();
 				string normalizedBinding = NormalizeAxisBinding(binding);
-				string axisName;
-				if (!m_sRollAxisBinding.IsEmpty() && normalizedBinding == m_sRollAxisBinding)
+				string axisName = GetFreelookLabelForAction(actionName);
+				if (!axisName.IsEmpty())
+				{
+					readable = axisName;
+				}
+				else if (!m_sRollAxisBinding.IsEmpty() && normalizedBinding == m_sRollAxisBinding)
 					axisName = m_sRollAxisLabel;
 				else if (!m_sPitchAxisBinding.IsEmpty() && normalizedBinding == m_sPitchAxisBinding)
 					axisName = m_sPitchAxisLabel;
@@ -1270,7 +1415,11 @@ class HOTASDebugController
 				else if (!m_sYawAxisBinding.IsEmpty() && normalizedBinding == m_sYawAxisBinding)
 					axisName = m_sYawAxisLabel;
 
-				if (!axisName.IsEmpty())
+				if (!GetFreelookLabelForAction(actionName).IsEmpty())
+				{
+					// Direction is already part of the user's text (for example "Thumbstick Up").
+				}
+				else if (!axisName.IsEmpty())
 					readable = string.Format("%1 %2", axisName, direction);
 				else
 					readable = string.Format("AXIS %1%2", rawAxis + 1, direction);

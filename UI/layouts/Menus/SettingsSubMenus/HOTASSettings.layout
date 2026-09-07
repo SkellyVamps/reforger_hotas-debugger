@@ -47,8 +47,8 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
         SCR_SpinBoxComponent "{5472C6CBC0640458}" {
          m_sLabel "HOTAS Config"
          m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
-         m_bUseLightArrows 1
-         m_bShowHints 0
+         m_bUseLightArrows 0
+         m_bCycleMode 1 m_bShowHints 0
         }
        }
       }
@@ -66,32 +66,32 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
       ButtonWidgetClass "{8C52D9F7A31B6420}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "HUDEnabled"
        Slot LayoutSlot "{8C52D9F7A31B6421}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "HUD Enabled" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "HUD Enabled" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6424}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "HUDScale"
        Slot LayoutSlot "{8C52D9F7A31B6425}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Scale" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Scale" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6426}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "FadeDelay"
        Slot LayoutSlot "{8C52D9F7A31B6427}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Fade Delay" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Fade Delay" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6428}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "FadeDuration"
        Slot LayoutSlot "{8C52D9F7A31B6429}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Fade Duration" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Fade Duration" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6430}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "BackgroundEnabled"
        Slot LayoutSlot "{8C52D9F7A31B6431}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Background" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Background" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6432}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "BackgroundOpacity"
        Slot LayoutSlot "{8C52D9F7A31B6433}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Background Opacity" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Background Opacity" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       VerticalLayoutWidgetClass "{8C52D9F7A31B6434}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "TitleAxes"
@@ -107,22 +107,22 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
       ButtonWidgetClass "{8C52D9F7A31B6436}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "RollAxis"
        Slot LayoutSlot "{8C52D9F7A31B6437}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Roll Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Roll Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6438}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "PitchAxis"
        Slot LayoutSlot "{8C52D9F7A31B6439}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Pitch Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Pitch Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6440}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "ThrottleAxis"
        Slot LayoutSlot "{8C52D9F7A31B6441}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Throttle Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Throttle Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       ButtonWidgetClass "{8C52D9F7A31B6442}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "YawAxis"
        Slot LayoutSlot "{8C52D9F7A31B6443}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Yaw Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Yaw Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
       VerticalLayoutWidgetClass "{8C52D9F7A31B6444}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "TitleAdvanced"
@@ -138,7 +138,7 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
       ButtonWidgetClass "{8C52D9F7A31B6446}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
        Name "DebugMode"
        Slot LayoutSlot "{8C52D9F7A31B6447}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Debug Mode" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Debug Mode" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 0 m_bCycleMode 1 m_bShowHints 0 } }
       }
      }
     }
@@ -215,7 +215,7 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
            Color 0.012 0.016 0.021 1
            Size 1024 1024
           }
-          ImageWidgetClass "{8C52D9F7A31B6514}" {
+          ButtonWidgetClass "{8C52D9F7A31B6514}" {
            Name "HUDPositionPreview"
            Slot FrameWidgetSlot "{8C52D9F7A31B6515}" {
             PositionX 120
@@ -224,8 +224,17 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
             SizeY 16
             Alignment 0 0
            }
-           Color 0.7605 0.3865 0.0802 1
-           Size 1024 1024
+           {
+            ImageWidgetClass "{8C52D9F7A31B6516}" {
+             Name "HUDPositionPreviewFill"
+             Slot ButtonWidgetSlot "{8C52D9F7A31B6517}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+             Color 0.7605 0.3865 0.0802 1
+             Size 1024 1024
+            }
+           }
           }
          }
         }

@@ -233,15 +233,17 @@ modded class HOTASBindingsSubMenu
 				bindingValue.SetText(GetBindingDisplayText(i));
 
 			HOTASBindingRowHandler rowHandler = new HOTASBindingRowHandler(this, i);
-			row.AddHandler(rowHandler);
+			Widget actionButton = row.FindAnyWidget("ActionSelectButton");
+			if (actionButton)
+				actionButton.AddHandler(rowHandler);
 
-			Widget bindingButton = row.FindAnyWidget("BindingButton");
 			HOTASBindingCaptureRowHandler captureHandler = new HOTASBindingCaptureRowHandler(this, i);
+			Widget bindingButton = row.FindAnyWidget("BindingButton");
 			if (bindingButton)
 				bindingButton.AddHandler(captureHandler);
 
-			Widget clearButton = row.FindAnyWidget("ClearBindingButton");
 			HOTASBindingClearRowHandler clearHandler = new HOTASBindingClearRowHandler(this, i);
+			Widget clearButton = row.FindAnyWidget("ClearBindingButton");
 			if (clearButton)
 				clearButton.AddHandler(clearHandler);
 
@@ -300,9 +302,18 @@ modded class HOTASBindingsSubMenu
 
 		m_iSelectedAction = definitionIndex;
 		RefreshCurrentBinding();
+
+		HOTASBindingDefinition definition = m_Definitions[definitionIndex];
+		Print(string.Format("[HOTAS Bindings] Capture requested for %1 (%2)", definition.m_sDisplayName, definition.m_sCaptureAction));
+
 		OnBindInput();
 		RefreshActionRowBindingText();
 		RefreshActionRowSelection();
+
+		if (m_bCapturing)
+			Print(string.Format("[HOTAS Bindings] Listening for joystick input on %1", definition.m_sDisplayName));
+		else
+			Print(string.Format("[HOTAS Bindings] Capture did not start for %1", definition.m_sDisplayName), LogLevel.WARNING);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -332,17 +343,25 @@ modded class HOTASBindingsSubMenu
 			if (!row)
 				continue;
 
+			int definitionIndex = m_ActionRowDefinitionIndices[i];
 			TextWidget bindingValue = TextWidget.Cast(row.FindAnyWidget("BindingValue"));
 			if (bindingValue)
-				bindingValue.SetText(GetBindingDisplayText(m_ActionRowDefinitionIndices[i]));
+				bindingValue.SetText(GetBindingDisplayText(definitionIndex));
+
+			Widget actionButton = row.FindAnyWidget("ActionSelectButton");
+			if (actionButton)
+				actionButton.SetEnabled(!m_bCapturing);
+
+			Widget bindingButton = row.FindAnyWidget("BindingButton");
+			if (bindingButton)
+				bindingButton.SetEnabled(!m_bCapturing);
 
 			Widget clearButton = row.FindAnyWidget("ClearBindingButton");
 			if (clearButton)
 			{
-				int definitionIndex = m_ActionRowDefinitionIndices[i];
 				bool hasBinding = m_Bindings.IsIndexValid(definitionIndex) && !m_Bindings[definitionIndex].IsEmpty();
 				clearButton.SetEnabled(hasBinding && !m_bCapturing);
-				if (hasBinding)
+				if (hasBinding && !m_bCapturing)
 					clearButton.SetOpacity(1.0);
 				else
 					clearButton.SetOpacity(0.28);

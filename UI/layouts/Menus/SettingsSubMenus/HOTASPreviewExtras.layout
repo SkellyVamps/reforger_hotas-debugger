@@ -5,18 +5,38 @@ VerticalLayoutWidgetClass "{7F73928A2BC0FB9D}" {
   SizeMode Fill
  }
  {
-  ButtonWidgetClass "{5D9A7E31C64B2081}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
-   Name "PreviewLighting"
-   Slot LayoutSlot "{5D9A7E31C64B2082}" {
-    Padding 4 2 4 8
+  HorizontalLayoutWidgetClass "{E84575A46609C91D}" {
+   Name "PreviewLightingButtons"
+   Slot LayoutSlot "{4FAE352019057EF1}" {
+    Padding 8 0 8 10
+    SizeMode Fill
    }
-   components {
-    SCR_SpinBoxComponent "{5D9A7E31C64B2083}" {
-     m_sLabel "Preview Lighting"
-     m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
-     m_bUseLightArrows 1
-     m_bShowHints 0
-     m_bCycleMode 0
+   {
+    ButtonWidgetClass "{4DA2B0CC62DF7C13}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+     Name "PreviewDay"
+     Slot LayoutSlot "{505DFA46E58C51AB}" {
+      Padding 0 0 4 0
+      SizeMode Fill
+      FillWeight 1
+     }
+     components {
+      SCR_ButtonTextComponent "{A839370E179C2F88}" {
+       m_sText "Day"
+      }
+     }
+    }
+    ButtonWidgetClass "{2F8C65D15EC0F920}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+     Name "PreviewNight"
+     Slot LayoutSlot "{4FFB4CACEE572B33}" {
+      Padding 4 0 0 0
+      SizeMode Fill
+      FillWeight 1
+     }
+     components {
+      SCR_ButtonTextComponent "{5764657A07BB6B7C}" {
+       m_sText "Night"
+      }
+     }
     }
    }
   }
@@ -51,7 +71,7 @@ VerticalLayoutWidgetClass "{7F73928A2BC0FB9D}" {
     SizeMode Fill
    }
    Color 0.72 0.72 0.72 1
-   Text "Press or move a bound HOTAS control while in a supported vehicle."
+   Text "Press or move any bound HOTAS control. A vehicle is not required."
    "Font Size" 14
   }
  }

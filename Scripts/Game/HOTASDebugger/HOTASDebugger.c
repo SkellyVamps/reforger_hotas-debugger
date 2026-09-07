@@ -36,11 +36,23 @@ class HOTASDebugController
 	protected float m_fBackgroundOpacity = 0.55;
 	protected float m_fFadeOpacity = 1.0;
 
-	// Raw joystick axis numbers used by this HOTAS. Users can remap these in HOTASHudSettings.txt.
-	protected int m_iRollAxis = 0;
-	protected int m_iPitchAxis = 1;
-	protected int m_iThrottleAxis = 2;
-	protected int m_iYawAxis = 5;
+	// Axis assignments are discovered from the currently active HOTAS config.
+	// Keep the complete joystickX:axisY key internally so two devices that both
+	// expose axis0 do not get mistaken for one another.
+	protected string m_sRollAxisBinding;
+	protected string m_sPitchAxisBinding;
+	protected string m_sThrottleAxisBinding;
+	protected string m_sYawAxisBinding;
+	protected int m_iRollAxis = -1;
+	protected int m_iPitchAxis = -1;
+	protected int m_iThrottleAxis = -1;
+	protected int m_iYawAxis = -1;
+
+	// Player-editable HUD text for each discovered axis.
+	protected string m_sRollAxisLabel = "Roll";
+	protected string m_sPitchAxisLabel = "Pitch";
+	protected string m_sThrottleAxisLabel = "Throttle";
+	protected string m_sYawAxisLabel = "Yaw";
 
 	static HOTASDebugController GetInstance()
 	{
@@ -70,6 +82,7 @@ class HOTASDebugController
 
 		BuildActionList();
 		LoadHudSettings();
+		RefreshAssignedAxesFromBindings();
 		CreateHud();
 		RegisterListeners();
 
@@ -346,11 +359,11 @@ class HOTASDebugController
 				defaults.WriteLine("fade_duration_ms=350");
 				defaults.WriteLine("background=1");
 				defaults.WriteLine("background_opacity=0.55");
-				defaults.WriteLine("# Raw joystick axis mapping. Set an unused control to -1.");
-				defaults.WriteLine("roll_axis=0");
-				defaults.WriteLine("pitch_axis=1");
-				defaults.WriteLine("throttle_axis=2");
-				defaults.WriteLine("yaw_axis=5");
+				defaults.WriteLine("# Axis numbers are detected from the active HOTAS config. These values only rename the HUD display.");
+				defaults.WriteLine("roll_label=Roll");
+				defaults.WriteLine("pitch_label=Pitch");
+				defaults.WriteLine("throttle_label=Throttle");
+				defaults.WriteLine("yaw_label=Yaw");
 				defaults.Close();
 			}
 		}
@@ -402,14 +415,14 @@ class HOTASDebugController
 				m_bBackgroundEnabled = value.ToInt(1) != 0;
 			else if (key == "background_opacity")
 				m_fBackgroundOpacity = Math.Clamp(value.ToFloat(0.55), 0.0, 1.0);
-			else if (key == "roll_axis")
-				m_iRollAxis = Math.ClampInt(value.ToInt(0), -1, 63);
-			else if (key == "pitch_axis")
-				m_iPitchAxis = Math.ClampInt(value.ToInt(1), -1, 63);
-			else if (key == "throttle_axis")
-				m_iThrottleAxis = Math.ClampInt(value.ToInt(2), -1, 63);
-			else if (key == "yaw_axis")
-				m_iYawAxis = Math.ClampInt(value.ToInt(5), -1, 63);
+			else if (key == "roll_label")
+				m_sRollAxisLabel = value;
+			else if (key == "pitch_label")
+				m_sPitchAxisLabel = value;
+			else if (key == "throttle_label")
+				m_sThrottleAxisLabel = value;
+			else if (key == "yaw_label")
+				m_sYawAxisLabel = value;
 		}
 		file.Close();
 
@@ -425,7 +438,7 @@ class HOTASDebugController
 		}
 
 		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1/%2 scale=%3 fade=%4/%5 background=%6 opacity=%7", m_fHudPositionX, m_fHudPositionY, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
-		Print(string.Format("[HOTAS Debugger] Axis mapping: roll=%1 pitch=%2 throttle=%3 yaw=%4", m_iRollAxis, m_iPitchAxis, m_iThrottleAxis, m_iYawAxis), LogLevel.NORMAL);
+		Print(string.Format("[HOTAS Debugger] Axis HUD labels: roll=%1 pitch=%2 throttle=%3 yaw=%4", m_sRollAxisLabel, m_sPitchAxisLabel, m_sThrottleAxisLabel, m_sYawAxisLabel), LogLevel.NORMAL);
 	}
 
 	protected void ResolveLegacyHudPosition(string position, out float x, out float y)
@@ -466,11 +479,11 @@ class HOTASDebugController
 		file.WriteLine(string.Format("fade_duration_ms=%1", m_iFadeDurationMs));
 		file.WriteLine(string.Format("background=%1", BoolToInt(m_bBackgroundEnabled)));
 		file.WriteLine(string.Format("background_opacity=%1", m_fBackgroundOpacity));
-		file.WriteLine("# Raw joystick axis mapping. Human-facing menu labels are one-based; -1 disables a semantic label.");
-		file.WriteLine(string.Format("roll_axis=%1", m_iRollAxis));
-		file.WriteLine(string.Format("pitch_axis=%1", m_iPitchAxis));
-		file.WriteLine(string.Format("throttle_axis=%1", m_iThrottleAxis));
-		file.WriteLine(string.Format("yaw_axis=%1", m_iYawAxis));
+		file.WriteLine("# Axis numbers are detected from the active HOTAS config. These values only rename the HUD display.");
+		file.WriteLine(string.Format("roll_label=%1", m_sRollAxisLabel));
+		file.WriteLine(string.Format("pitch_label=%1", m_sPitchAxisLabel));
+		file.WriteLine(string.Format("throttle_label=%1", m_sThrottleAxisLabel));
+		file.WriteLine(string.Format("yaw_label=%1", m_sYawAxisLabel));
 		file.Close();
 	}
 
@@ -478,6 +491,140 @@ class HOTASDebugController
 	void ReloadHudSettings()
 	{
 		LoadHudSettings();
+		RefreshAssignedAxesFromBindings();
+	}
+
+	void RefreshAssignedAxes()
+	{
+		RefreshAssignedAxesFromBindings();
+	}
+
+	int GetAxisAssignmentRaw(int axisIndex)
+	{
+		switch (axisIndex)
+		{
+			case 0: return m_iRollAxis;
+			case 1: return m_iPitchAxis;
+			case 2: return m_iThrottleAxis;
+			case 3: return m_iYawAxis;
+		}
+		return -1;
+	}
+
+	string GetAxisAssignmentDisplayName(int axisIndex)
+	{
+		int rawAxis = GetAxisAssignmentRaw(axisIndex);
+		if (rawAxis < 0)
+			return "Unassigned";
+		return string.Format("Axis %1", rawAxis + 1);
+	}
+
+	string GetAxisSettingRowLabel(int axisIndex)
+	{
+		string logicalName;
+		switch (axisIndex)
+		{
+			case 0: logicalName = "Roll Axis"; break;
+			case 1: logicalName = "Pitch Axis"; break;
+			case 2: logicalName = "Throttle Axis"; break;
+			case 3: logicalName = "Yaw Axis"; break;
+			default: logicalName = "Axis"; break;
+		}
+
+		return string.Format("%1 - %2", logicalName, GetAxisAssignmentDisplayName(axisIndex));
+	}
+
+	string GetAxisCustomLabel(int axisIndex)
+	{
+		switch (axisIndex)
+		{
+			case 0: return m_sRollAxisLabel;
+			case 1: return m_sPitchAxisLabel;
+			case 2: return m_sThrottleAxisLabel;
+			case 3: return m_sYawAxisLabel;
+		}
+		return string.Empty;
+	}
+
+	void SetAxisCustomLabel(int axisIndex, string value)
+	{
+		value = value.Trim();
+		switch (axisIndex)
+		{
+			case 0: m_sRollAxisLabel = value; break;
+			case 1: m_sPitchAxisLabel = value; break;
+			case 2: m_sThrottleAxisLabel = value; break;
+			case 3: m_sYawAxisLabel = value; break;
+			default: return;
+		}
+
+		SaveHudSettings();
+	}
+
+	protected string NormalizeAxisBinding(string binding)
+	{
+		int axisPos = binding.IndexOf(":axis");
+		if (axisPos < 0)
+			return string.Empty;
+
+		string normalized = binding;
+		if (normalized.EndsWith("+") || normalized.EndsWith("-"))
+			normalized = normalized.Substring(0, normalized.Length() - 1);
+		return normalized;
+	}
+
+	protected int GetRawAxisFromBinding(string binding)
+	{
+		int axisPos = binding.IndexOf(":axis");
+		if (axisPos < 0)
+			return -1;
+
+		string axisText = binding.Substring(axisPos + 5, binding.Length() - axisPos - 5);
+		if (axisText.EndsWith("+") || axisText.EndsWith("-"))
+			axisText = axisText.Substring(0, axisText.Length() - 1);
+		return axisText.ToInt(-1);
+	}
+
+	protected string GetAxisBindingFromAction(string actionName)
+	{
+		string bindingsText = GetJoystickBindings(actionName);
+		ref array<string> bindings = {};
+		bindingsText.Split(" / ", bindings, true);
+		foreach (string binding : bindings)
+		{
+			string normalized = NormalizeAxisBinding(binding);
+			if (!normalized.IsEmpty())
+				return normalized;
+		}
+		return string.Empty;
+	}
+
+	protected string ResolveAxisBindingFromActions(string primaryAction, string negativeAction, string positiveAction)
+	{
+		string binding = GetAxisBindingFromAction(primaryAction);
+		if (!binding.IsEmpty())
+			return binding;
+
+		binding = GetAxisBindingFromAction(negativeAction);
+		if (!binding.IsEmpty())
+			return binding;
+
+		return GetAxisBindingFromAction(positiveAction);
+	}
+
+	protected void RefreshAssignedAxesFromBindings()
+	{
+		m_sRollAxisBinding = ResolveAxisBindingFromActions("PFC_Roll", "HelicopterCyclicLeft", "HelicopterCyclicRight");
+		m_sPitchAxisBinding = ResolveAxisBindingFromActions("PFC_Pitch", "HelicopterCyclicForward", "HelicopterCyclicBack");
+		m_sThrottleAxisBinding = ResolveAxisBindingFromActions("PFC_ThrottleAxis", "HelicopterCollectiveDecrease", "HelicopterCollectiveIncrease");
+		m_sYawAxisBinding = ResolveAxisBindingFromActions("PFC_Yaw", "HelicopterAntiTorqueLeft", "HelicopterAntiTorqueRight");
+
+		m_iRollAxis = GetRawAxisFromBinding(m_sRollAxisBinding);
+		m_iPitchAxis = GetRawAxisFromBinding(m_sPitchAxisBinding);
+		m_iThrottleAxis = GetRawAxisFromBinding(m_sThrottleAxisBinding);
+		m_iYawAxis = GetRawAxisFromBinding(m_sYawAxisBinding);
+
+		Print(string.Format("[HOTAS Debugger] Config axis assignments: roll=%1 pitch=%2 throttle=%3 yaw=%4", GetAxisAssignmentDisplayName(0), GetAxisAssignmentDisplayName(1), GetAxisAssignmentDisplayName(2), GetAxisAssignmentDisplayName(3)), LogLevel.NORMAL);
 	}
 
 	void GetHudPositionNormalized(out float x, out float y)
@@ -562,7 +709,7 @@ class HOTASDebugController
 			case 6:
 			case 7:
 			case 8:
-			case 9: return 65;
+			case 9: return 0;
 			case 10: return 2;
 		}
 		return 0;
@@ -582,10 +729,10 @@ class HOTASDebugController
 				if (m_bBackgroundEnabled) return 1;
 				return 0;
 			case 5: return Math.ClampInt(Math.Round(m_fBackgroundOpacity * 20.0), 0, 20);
-			case 6: return Math.ClampInt(m_iRollAxis + 1, 0, 64);
-			case 7: return Math.ClampInt(m_iPitchAxis + 1, 0, 64);
-			case 8: return Math.ClampInt(m_iThrottleAxis + 1, 0, 64);
-			case 9: return Math.ClampInt(m_iYawAxis + 1, 0, 64);
+			case 6:
+			case 7:
+			case 8:
+			case 9: return 0;
 			case 10:
 				if (m_bDebugMode) return 1;
 				return 0;
@@ -611,8 +758,7 @@ class HOTASDebugController
 			case 7:
 			case 8:
 			case 9:
-				if (optionIndex == 0) return "Disabled";
-				return string.Format("Axis %1", optionIndex);
+				return GetAxisAssignmentDisplayName(index - 6);
 		}
 		return "";
 	}
@@ -632,10 +778,10 @@ class HOTASDebugController
 			case 3: m_iFadeDurationMs = optionIndex * 50; break;
 			case 4: m_bBackgroundEnabled = optionIndex != 0; break;
 			case 5: m_fBackgroundOpacity = optionIndex * 0.05; break;
-			case 6: m_iRollAxis = optionIndex - 1; break;
-			case 7: m_iPitchAxis = optionIndex - 1; break;
-			case 8: m_iThrottleAxis = optionIndex - 1; break;
-			case 9: m_iYawAxis = optionIndex - 1; break;
+			case 6:
+			case 7:
+			case 8:
+			case 9: return;
 			case 10: m_bDebugMode = optionIndex != 0; break;
 			default: return;
 		}
@@ -1018,15 +1164,16 @@ class HOTASDebugController
 					direction = "-";
 
 				int rawAxis = axisText.ToInt();
+				string normalizedBinding = NormalizeAxisBinding(binding);
 				string axisName;
-				if (rawAxis == m_iRollAxis && m_iRollAxis >= 0)
-					axisName = "ROLL";
-				else if (rawAxis == m_iPitchAxis && m_iPitchAxis >= 0)
-					axisName = "PITCH";
-				else if (rawAxis == m_iThrottleAxis && m_iThrottleAxis >= 0)
-					axisName = "THROTTLE";
-				else if (rawAxis == m_iYawAxis && m_iYawAxis >= 0)
-					axisName = "YAW";
+				if (!m_sRollAxisBinding.IsEmpty() && normalizedBinding == m_sRollAxisBinding)
+					axisName = m_sRollAxisLabel;
+				else if (!m_sPitchAxisBinding.IsEmpty() && normalizedBinding == m_sPitchAxisBinding)
+					axisName = m_sPitchAxisLabel;
+				else if (!m_sThrottleAxisBinding.IsEmpty() && normalizedBinding == m_sThrottleAxisBinding)
+					axisName = m_sThrottleAxisLabel;
+				else if (!m_sYawAxisBinding.IsEmpty() && normalizedBinding == m_sYawAxisBinding)
+					axisName = m_sYawAxisLabel;
 
 				if (!axisName.IsEmpty())
 					readable = string.Format("%1 %2", axisName, direction);

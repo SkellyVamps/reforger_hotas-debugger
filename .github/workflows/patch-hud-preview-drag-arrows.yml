@@ -1,0 +1,39 @@
+name: Patch HUD Preview Drag and Arrows
+
+on:
+  push:
+    branches:
+      - fix/hud-preview-drag-arrows
+    paths:
+      - 'scripts/patch_hud_preview_drag_arrows.py'
+      - '.github/workflows/patch-hud-preview-drag-arrows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/hud-preview-drag-arrows
+      - run: python scripts/patch_hud_preview_drag_arrows.py
+      - run: |
+          grep -q 'ButtonWidgetClass "{8C52D9F7A31B6514}"' UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout
+          grep -q 'Name "HUDPositionPreviewFill"' UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout
+          grep -q 'm_bCycleMode 1' UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout
+          grep -q 'm_bUseLightArrows 0' UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout
+          grep -q 'bool arrowsEnabled = optionCount > 1' Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+          grep -q 'panel.SetVisible(true)' Scripts/Game/HOTASDebugger/HOTASSettingsTab.c
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Scripts/Game/HOTASDebugger/HOTASSettingsTab.c UI/layouts/Menus/SettingsSubMenus/HOTASSettings.layout
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Fix HUD preview dragging and settings arrows"
+            git push origin HEAD:fix/hud-preview-drag-arrows
+          fi

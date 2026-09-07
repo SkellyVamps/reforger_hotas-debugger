@@ -78,11 +78,29 @@ modded class HOTASBindingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
+	protected void HideImportDropdownLabel()
+	{
+		if (!m_ImportDropdown)
+			return;
+
+		// Do not call UseLabel(false) after the combo has initialized. The vanilla label contains an
+		// SCR_AutomaticScrollComponent; removing that hierarchy leaves its focus callback with stale
+		// widget references and can throw a VM null-pointer exception. Keep it alive, clear it, and
+		// hide it instead.
+		m_ImportDropdown.SetLabel(string.Empty);
+		Widget labelWidget = m_ImportDropdown.GetLabelWidget();
+		if (labelWidget)
+		{
+			labelWidget.SetVisible(false);
+			labelWidget.SetEnabled(false);
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
 	protected void SetupPolishedBindingControls()
 	{
 		m_ImportDropdown = SCR_ComboBoxComponent.GetComboBoxComponent("ImportConfig", m_wRoot);
-		if (m_ImportDropdown)
-			m_ImportDropdown.UseLabel(false);
+		HideImportDropdownLabel();
 
 		m_EditorStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("EditorStatusText"));
 		m_ManagedStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("ManagedConfigStatusText"));
@@ -154,7 +172,7 @@ modded class HOTASBindingsSubMenu
 		if (!m_ImportDropdown)
 			return;
 
-		m_ImportDropdown.UseLabel(false);
+		HideImportDropdownLabel();
 		m_ImportDropdown.ClearAll();
 		m_ImportConfigs.Clear();
 		m_ImportDropdown.AddItem("Select read-only config...");

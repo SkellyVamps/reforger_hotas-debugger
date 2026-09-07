@@ -10,7 +10,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
    Slot LayoutSlot "{A7B3D419C82E6F14}" {
     Padding -2 0 0 0
     SizeMode Fill
-    FillWeight 1.7
+    FillWeight 1.82
    }
    {
     ButtonWidgetClass "{A7B3D419C82E6F15}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
@@ -35,7 +35,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
     HorizontalLayoutWidgetClass "{A7B3D419C82E6F18}" {
      Name "ColumnHeaders"
      Slot LayoutSlot "{A7B3D419C82E6F19}" {
-      Padding 22 10 60 2
+      Padding 16 10 58 2
      }
      {
       TextWidgetClass "{A7B3D419C82E6F1A}" {
@@ -100,7 +100,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
    Name "DescriptionOverlay"
    Slot LayoutSlot "{A7B3D419C82E6F31}" {
     SizeMode Fill
-    FillWeight 0.72
+    FillWeight 0.68
    }
    {
     VerticalLayoutWidgetClass "{A7B3D419C82E6F32}" {
@@ -108,7 +108,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
      Slot OverlayWidgetSlot "{A7B3D419C82E6F33}" {
       HorizontalAlign 3
       VerticalAlign 3
-      Padding 30 62 20 18
+      Padding 24 62 18 18
      }
      {
       OverlayWidgetClass "{A7B3D419C82E6F34}" {
@@ -151,21 +151,52 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
        Slot LayoutSlot "{A7B3D419C82E6F47}" {
         Padding 0 2 0 4
        }
+       Visible 0
        components {
         SCR_ButtonTextComponent "{A7B3D419C82E6F48}" {
          m_sText "Cancel Input Capture (Esc)"
         }
        }
       }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F49}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "EditorStatus"
+      SizeLayoutWidgetClass "{A7B3D419C82E6F49}" {
+       Name "EditorStatusBox"
        Slot LayoutSlot "{A7B3D419C82E6F4A}" {
-        Padding 0 2 0 8
+        Padding 0 4 0 10
        }
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F4B}" {
-         m_sLabel "Ready."
-         m_fPaddingTop 1
+       AllowHeightOverride 1
+       HeightOverride 76
+       {
+        OverlayWidgetClass "{A7B3D419C82E6F4B}" {
+         Name "EditorStatusOverlay"
+         Slot AlignableSlot "{A7B3D419C82E6F4C}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         {
+          ImageWidgetClass "{A7B3D419C82E6F4D}" {
+           Name "EditorStatusBackground"
+           Slot OverlayWidgetSlot "{A7B3D419C82E6F4E}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+           }
+           Color 0.018 0.024 0.028 0.62
+          }
+          RichTextWidgetClass "{A7B3D419C82E6F4F}" {
+           Name "EditorStatusText"
+           Slot OverlayWidgetSlot "{A7B3D419C82E6F4A1}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+            Padding 10 6 10 6
+           }
+           Color 0.94 0.94 0.9 1
+           Text "Ready."
+           "Font Size" 16
+           "Min Font Size" 13
+           Wrap 1
+           "Vertical Alignment" Center
+           "Line Spacing" 65
+          }
+         }
         }
        }
       }
@@ -174,7 +205,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
        components {
         SCR_LabelComponent "{A7B3D419C82E6F51}" {
          m_sLabel "Read-Only Import"
-         m_fPaddingTop 8
+         m_fPaddingTop 6
         }
        }
       }
@@ -201,19 +232,34 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
        components {
         SCR_LabelComponent "{A7B3D419C82E6F59}" {
          m_sLabel "Managed HOTAS Config"
-         m_fPaddingTop 8
+         m_fPaddingTop 6
         }
        }
       }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F5A}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "ManagedConfigStatus"
+      SizeLayoutWidgetClass "{A7B3D419C82E6F5A}" {
+       Name "ManagedConfigStatusBox"
        Slot LayoutSlot "{A7B3D419C82E6F5B}" {
-        Padding 0 1 0 4
+        Padding 0 2 0 6
        }
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F5C}" {
-         m_sLabel "Managed file: HOTAS_Config.conf"
-         m_fPaddingTop 1
+       AllowHeightOverride 1
+       HeightOverride 48
+       {
+        RichTextWidgetClass "{A7B3D419C82E6F5C}" {
+         Name "ManagedConfigStatusText"
+         Slot AlignableSlot "{A7B3D419C82E6F5C1}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+          Padding 8 3 8 3
+         }
+         Color 0.94 0.94 0.9 1
+         Text "HOTAS_Config.conf"
+         "Font Size" 16
+         "Min Font Size" 13
+         Wrap 1
+         "Vertical Alignment" Center
+         FontProperties FontProperties "{A7B3D419C82E6F5C2}" {
+          Bold 1
+         }
         }
        }
       }

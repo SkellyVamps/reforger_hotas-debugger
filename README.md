@@ -69,20 +69,20 @@ Each row shows the detected axis and provides an editable display label. These l
 
 ### Free Look Labels
 
-Free Look Up, Down, Right, and Left are tracked separately so a direction can be named after the physical control that produced it, for example:
+Free Look Up, Down, Right, and Left are tracked separately so a direction can be named after the physical control that produced it. New settings files use these defaults:
 
 ```text
-Thumbstick Up
-Thumbstick Down
-Thumbstick Right
-Thumbstick Left
+Thumb Up
+Thumb Down
+Thumb Right
+Thumb Left
 ```
 
-Leaving a Free Look label blank keeps the normal raw `AXIS N+/-` display.
+The values remain fully editable in the HOTAS settings page. Leaving a Free Look label blank keeps the normal raw `AXIS N+/-` display.
 
 ### Reset Controls
 
-The settings page provides separate reset actions for HUD presentation settings and custom labels. Resetting labels does not move the HUD, and resetting the HUD does not change the active HOTAS input configuration.
+The settings page provides separate reset actions for HUD presentation settings and custom labels. Resetting labels restores the default Roll/Pitch/Throttle/Yaw and Thumb direction names without moving the HUD. Resetting the HUD does not change the active HOTAS input configuration.
 
 ### Live Input Tester
 
@@ -96,7 +96,7 @@ The UI persists its values to:
 $profile:HOTASHudSettings.txt
 ```
 
-A current file contains values similar to:
+This is a local per-profile settings file and is ignored by the repository. If the file is missing, the mod generates it automatically with defaults equivalent to:
 
 ```text
 hud_enabled=1
@@ -112,10 +112,10 @@ roll_label=Roll
 pitch_label=Pitch
 throttle_label=Throttle
 yaw_label=Yaw
-freelook_up_label=
-freelook_down_label=
-freelook_right_label=
-freelook_left_label=
+freelook_up_label=Thumb Up
+freelook_down_label=Thumb Down
+freelook_right_label=Thumb Right
+freelook_left_label=Thumb Left
 ```
 
 Normal use should be done through the in-game HOTAS settings page. The text file mainly remains useful for troubleshooting and migration from older versions.

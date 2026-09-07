@@ -416,7 +416,7 @@ class HOTASDebugController
 			else if (key == "position")
 				m_sHudPosition = value;
 			else if (key == "scale")
-				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.5, 2.0);
+				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.6, 2.0);
 			else if (key == "fade_delay_ms")
 				m_iFadeDelayMs = Math.ClampInt(value.ToInt(1800), 0, 10000);
 			else if (key == "fade_duration_ms")
@@ -474,6 +474,36 @@ class HOTASDebugController
 	void ReloadHudSettings()
 	{
 		LoadHudSettings();
+	}
+
+	// Settings-tab slider values are human-facing percentages. HUD scale maps
+	// 0% -> 0.6x and 100% -> 2.0x, while opacity maps directly to 0..1.
+	float GetHudScalePercent()
+	{
+		return Math.Clamp(((m_fHudScale - 0.6) / 1.4) * 100.0, 0.0, 100.0);
+	}
+
+	void SetHudScalePercent(float percent)
+	{
+		percent = Math.Clamp(percent, 0.0, 100.0);
+		m_fHudScale = 0.6 + (percent / 100.0) * 1.4;
+		SaveHudSettings();
+		if (m_bInitialized)
+			RebuildHud();
+	}
+
+	float GetBackgroundOpacityPercent()
+	{
+		return Math.Clamp(m_fBackgroundOpacity * 100.0, 0.0, 100.0);
+	}
+
+	void SetBackgroundOpacityPercent(float percent)
+	{
+		percent = Math.Clamp(percent, 0.0, 100.0);
+		m_fBackgroundOpacity = percent / 100.0;
+		SaveHudSettings();
+		if (m_bInitialized)
+			RebuildHud();
 	}
 
 	int GetSettingsCount()
@@ -541,7 +571,7 @@ class HOTASDebugController
 		{
 			case 0: return 2;
 			case 1: return 9;
-			case 2: return 16;
+			case 2: return 15;
 			case 3: return 101;
 			case 4: return 101;
 			case 5: return 2;
@@ -563,7 +593,7 @@ class HOTASDebugController
 				if (m_bHudEnabled) return 1;
 				return 0;
 			case 1: return GetHudPositionIndex();
-			case 2: return Math.ClampInt(Math.Round((m_fHudScale - 0.5) * 10.0), 0, 15);
+			case 2: return Math.ClampInt(Math.Round((m_fHudScale - 0.6) * 10.0), 0, 14);
 			case 3: return Math.ClampInt(Math.Round(m_iFadeDelayMs / 100.0), 0, 100);
 			case 4: return Math.ClampInt(Math.Round(m_iFadeDurationMs / 50.0), 0, 100);
 			case 5:
@@ -609,7 +639,7 @@ class HOTASDebugController
 				if (optionIndex > 0) return "On";
 				return "Off";
 			case 1: return GetHudPositionOptionLabel(optionIndex);
-			case 2: return string.Format("%1x", (0.5 + optionIndex * 0.1).ToString(1));
+			case 2: return string.Format("%1x", (0.6 + optionIndex * 0.1).ToString(1));
 			case 3: return string.Format("%1 ms", optionIndex * 100);
 			case 4: return string.Format("%1 ms", optionIndex * 50);
 			case 6: return string.Format("%1%", optionIndex * 5);
@@ -634,7 +664,7 @@ class HOTASDebugController
 		{
 			case 0: m_bHudEnabled = optionIndex != 0; break;
 			case 1: SetHudPositionIndex(optionIndex); break;
-			case 2: m_fHudScale = 0.5 + optionIndex * 0.1; break;
+			case 2: m_fHudScale = 0.6 + optionIndex * 0.1; break;
 			case 3: m_iFadeDelayMs = optionIndex * 100; break;
 			case 4: m_iFadeDurationMs = optionIndex * 50; break;
 			case 5: m_bBackgroundEnabled = optionIndex != 0; break;

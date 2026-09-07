@@ -2,6 +2,8 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 {
 	protected SCR_SpinBoxComponent m_HotasConfig;
 	protected ref array<SCR_SpinBoxComponent> m_HudControls = {};
+	protected SCR_SliderComponent m_HudScaleSlider;
+	protected SCR_SliderComponent m_BackgroundOpacitySlider;
 	protected ref array<string> m_UserConfigs = {};
 	protected bool m_bLoading;
 	protected Widget m_PreviewHost;
@@ -28,6 +30,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		m_HotasConfig = FindSpinBox("HOTASConfig");
 		SetupHotasConfigSelector();
 		SetupHudControls();
+		SetupHudSliders();
 		SetupHudPositionPreview();
 		SyncHudPositionPreviewFromController();
 		m_bLoading = false;
@@ -44,6 +47,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		HOTASDebugController.GetInstance().ReloadHudSettings();
 		SyncHotasConfigSelector();
 		SyncHudControls();
+		SyncHudSliders();
 		SyncHudPositionPreviewFromController();
 		m_bLoading = false;
 		GetGame().GetCallqueue().CallLater(RefreshAllSpinBoxArrows, 0, false);
@@ -71,6 +75,16 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			return null;
 
 		return SCR_SpinBoxComponent.Cast(widget.FindHandler(SCR_SpinBoxComponent));
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected SCR_SliderComponent FindSlider(string widgetName)
+	{
+		Widget widget = m_wRoot.FindAnyWidget(widgetName);
+		if (!widget)
+			return null;
+
+		return SCR_SliderComponent.Cast(widget.FindHandler(SCR_SliderComponent));
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -262,7 +276,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		FrameSlot.SetSize(m_ScreenPreviewBackground, previewWidth, previewHeight);
 
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
-		float hudScale = 0.5 + controller.GetSettingOptionIndex(1) * 0.1;
+		float hudScale = 0.6 + (controller.GetHudScalePercent() / 100.0) * 1.4;
 
 		float hudWidth = 700 * hudScale;
 		float hudHeight = 70 * hudScale;
@@ -467,6 +481,38 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	}
 
 	//------------------------------------------------------------------------------------------------
+	protected void SetupHudSliders()
+	{
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+
+		m_HudScaleSlider = FindSlider("HUDScale");
+		if (m_HudScaleSlider)
+		{
+			m_HudScaleSlider.SetSliderSettings(0.0, 100.0, 1.0, "%1%");
+			m_HudScaleSlider.SetValue(controller.GetHudScalePercent());
+			m_HudScaleSlider.GetOnChangedFinal().Insert(OnHudScaleChanged);
+		}
+
+		m_BackgroundOpacitySlider = FindSlider("BackgroundOpacity");
+		if (m_BackgroundOpacitySlider)
+		{
+			m_BackgroundOpacitySlider.SetSliderSettings(0.0, 100.0, 1.0, "%1%");
+			m_BackgroundOpacitySlider.SetValue(controller.GetBackgroundOpacityPercent());
+			m_BackgroundOpacitySlider.GetOnChangedFinal().Insert(OnBackgroundOpacityChanged);
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SyncHudSliders()
+	{
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		if (m_HudScaleSlider)
+			m_HudScaleSlider.SetValue(controller.GetHudScalePercent());
+		if (m_BackgroundOpacitySlider)
+			m_BackgroundOpacitySlider.SetValue(controller.GetBackgroundOpacityPercent());
+	}
+
+	//------------------------------------------------------------------------------------------------
 	protected void SyncHudControls()
 	{
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
@@ -480,6 +526,25 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 				RefreshSpinBoxArrows(control, currentIndex, controller.GetSettingOptionCount(i));
 			}
 		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void OnHudScaleChanged(SCR_SliderComponent component, float value)
+	{
+		if (m_bLoading)
+			return;
+
+		HOTASDebugController.GetInstance().SetHudScalePercent(value);
+		UpdateHudPositionPreview();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void OnBackgroundOpacityChanged(SCR_SliderComponent component, float value)
+	{
+		if (m_bLoading)
+			return;
+
+		HOTASDebugController.GetInstance().SetBackgroundOpacityPercent(value);
 	}
 
 	//------------------------------------------------------------------------------------------------

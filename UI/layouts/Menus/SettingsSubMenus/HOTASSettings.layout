@@ -131,25 +131,49 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
         }
        }
       }
-      ButtonWidgetClass "{8C52D9F7A31B6436}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+      ButtonWidgetClass "{8C52D9F7A31B6436}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
        Name "RollAxis"
        Slot LayoutSlot "{8C52D9F7A31B6437}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Roll Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Roll Axis - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
       }
-      ButtonWidgetClass "{8C52D9F7A31B6438}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+      ButtonWidgetClass "{8C52D9F7A31B6438}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
        Name "PitchAxis"
        Slot LayoutSlot "{8C52D9F7A31B6439}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Pitch Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Pitch Axis - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
       }
-      ButtonWidgetClass "{8C52D9F7A31B6440}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+      ButtonWidgetClass "{8C52D9F7A31B6440}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
        Name "ThrottleAxis"
        Slot LayoutSlot "{8C52D9F7A31B6441}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Throttle Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Throttle Axis - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
       }
-      ButtonWidgetClass "{8C52D9F7A31B6442}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+      ButtonWidgetClass "{8C52D9F7A31B6442}" : "{0022F0B45ADBC5AC}UI/layouts/WidgetLibrary/EditBox/WLib_EditBox.layout" {
        Name "YawAxis"
        Slot LayoutSlot "{8C52D9F7A31B6443}" { Padding 4 4 4 4 }
-       components { SCR_SpinBoxComponent "{5472C6CBC0640458}" { m_sLabel "Yaw Axis" m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout" m_bUseLightArrows 1 m_bShowHints 0 } }
+       components {
+        SCR_EditBoxComponent "{547290FFBD5B33E9}" {
+         m_sLabel "Yaw Axis - Unassigned"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bShowWriteIcon 0
+        }
+       }
       }
       VerticalLayoutWidgetClass "{8C52D9F7A31B6444}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "TitleAdvanced"

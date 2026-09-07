@@ -4,6 +4,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	protected ref array<SCR_SpinBoxComponent> m_HudControls = {};
 	protected SCR_SliderComponent m_HudScaleSlider;
 	protected SCR_SliderComponent m_BackgroundOpacitySlider;
+	protected ref array<SCR_EditBoxComponent> m_AxisLabelEditors = {};
 	protected ref array<string> m_UserConfigs = {};
 	protected bool m_bLoading;
 
@@ -19,6 +20,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SetupHotasConfigSelector();
 		SetupHudControls();
 		SetupHudSliders();
+		SetupAxisLabelEditors();
 		m_bLoading = false;
 	}
 
@@ -32,6 +34,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SyncHotasConfigSelector();
 		SyncHudControls();
 		SyncHudSliders();
+		SyncAxisLabelEditors();
 		m_bLoading = false;
 	}
 
@@ -53,6 +56,16 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			return null;
 
 		return SCR_SliderComponent.Cast(widget.FindHandler(SCR_SliderComponent));
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected SCR_EditBoxComponent FindEditBox(string widgetName)
+	{
+		Widget widget = m_wRoot.FindAnyWidget(widgetName);
+		if (!widget)
+			return null;
+
+		return SCR_EditBoxComponent.Cast(widget.FindHandler(SCR_EditBoxComponent));
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -145,6 +158,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			binding.SetCustomConfigs(emptyConfigs);
 			binding.Save();
 			Print("[HOTAS Debugger] Custom HOTAS input config cleared from Settings", LogLevel.NORMAL);
+			ScheduleAxisAssignmentRefresh();
 			return;
 		}
 
@@ -155,6 +169,22 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		string selectedConfig = m_UserConfigs.Get(configIndex);
 		keybindModule.SelectJoystickPresetPath(selectedConfig);
 		Print(string.Format("[HOTAS Debugger] HOTAS input config selected from Settings: %1", selectedConfig), LogLevel.NORMAL);
+		ScheduleAxisAssignmentRefresh();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void ScheduleAxisAssignmentRefresh()
+	{
+		GetGame().GetCallqueue().CallLater(RefreshAxisAssignments, 0, false);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void RefreshAxisAssignments()
+	{
+		HOTASDebugController.GetInstance().RefreshAssignedAxes();
+		m_bLoading = true;
+		SyncAxisLabelEditors();
+		m_bLoading = false;
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -163,7 +193,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		m_HudControls.Clear();
 
 		// Keep this array aligned to HOTASDebugController setting indices. Scale (2)
-		// and Background Opacity (6) are sliders, so FindSpinBox intentionally returns null.
+		// and Background Opacity (6) are sliders. Axis rows (7-10) are edit boxes, so FindSpinBox intentionally returns null.
 		array<string> widgetNames = {
 			"HUDEnabled",
 			"HUDPosition",
@@ -239,6 +269,59 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 			m_HudScaleSlider.SetValue(controller.GetHudScalePercent());
 		if (m_BackgroundOpacitySlider)
 			m_BackgroundOpacitySlider.SetValue(controller.GetBackgroundOpacityPercent());
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SetupAxisLabelEditors()
+	{
+		m_AxisLabelEditors.Clear();
+		array<string> widgetNames = { "RollAxis", "PitchAxis", "ThrottleAxis", "YawAxis" };
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		controller.RefreshAssignedAxes();
+
+		for (int i = 0; i < widgetNames.Count(); i++)
+		{
+			SCR_EditBoxComponent editor = FindEditBox(widgetNames[i]);
+			m_AxisLabelEditors.Insert(editor);
+			if (!editor)
+				continue;
+
+			editor.SetLabel(controller.GetAxisSettingRowLabel(i));
+			editor.SetValue(controller.GetAxisCustomLabel(i));
+			editor.SetPlaceholderText("Custom HUD label");
+			editor.m_OnConfirm.Insert(OnAxisLabelConfirmed);
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SyncAxisLabelEditors()
+	{
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		for (int i = 0; i < m_AxisLabelEditors.Count(); i++)
+		{
+			SCR_EditBoxComponent editor = m_AxisLabelEditors[i];
+			if (!editor)
+				continue;
+
+			editor.SetLabel(controller.GetAxisSettingRowLabel(i));
+			editor.SetValue(controller.GetAxisCustomLabel(i));
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void OnAxisLabelConfirmed(SCR_EditBoxComponent component, string value)
+	{
+		if (m_bLoading)
+			return;
+
+		for (int i = 0; i < m_AxisLabelEditors.Count(); i++)
+		{
+			if (m_AxisLabelEditors[i] != component)
+				continue;
+
+			HOTASDebugController.GetInstance().SetAxisCustomLabel(i, value);
+			return;
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------

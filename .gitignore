@@ -2,6 +2,7 @@
 resourceDatabase.rdb
 Configs/
 UI/layouts/HUD/Notifications/
+HOTASHudSettings.txt
 
 # Common editor/OS files
 .vscode/

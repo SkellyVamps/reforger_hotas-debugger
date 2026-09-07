@@ -132,11 +132,11 @@ OverlayWidgetClass {
               HorizontalAlign 3
               VerticalAlign 3
              }
-             Opacity 0
              Color 1 1 1 1
-             Texture "{5CF471573DD34EDF}UI/Textures/HOTASBindings/check-icon_UI.edds"
-             Image ""
+             Texture "{CEE6E861DB399E61}UI/Textures/HOTASBindings/check icon_UI.edds"
              Size 128 128
+             "Blend Mode" Additive
+             Mask "{4DB9392BFD9EEC34}UI/Textures/HOTASBindings/check icon_UI_Mask.edds"
             }
            }
           }

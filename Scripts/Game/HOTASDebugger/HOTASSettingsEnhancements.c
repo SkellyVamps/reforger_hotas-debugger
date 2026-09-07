@@ -7,11 +7,35 @@ modded class HOTASSettingsSubMenu
 	protected SCR_ButtonTextComponent m_ResetHudButton;
 	protected SCR_ButtonTextComponent m_ResetLabelsButton;
 
+	protected Widget m_PreviewExtrasRoot;
+	protected RichTextWidget m_LiveInputReadable;
+	protected TextWidget m_LiveInputRaw;
+	protected int m_iLastLiveInputRevision = -1;
+
 	//------------------------------------------------------------------------------------------------
 	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
 	{
 		super.OnTabCreate(menuRoot, buttonsLayout, index);
 		SetupResetButtons();
+		SetupLiveInputTester();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override void OnTabShow()
+	{
+		super.OnTabShow();
+
+		m_iLastLiveInputRevision = -1;
+		UpdateLiveInputTester();
+		GetGame().GetCallqueue().Remove(UpdateLiveInputTester);
+		GetGame().GetCallqueue().CallLater(UpdateLiveInputTester, 100, true);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override void OnTabHide()
+	{
+		GetGame().GetCallqueue().Remove(UpdateLiveInputTester);
+		super.OnTabHide();
 	}
 
 	// Persist editable labels as the text changes. OnConfirm remains registered by the
@@ -60,6 +84,41 @@ modded class HOTASSettingsSubMenu
 		m_ResetLabelsButton = SCR_ButtonTextComponent.GetButtonText("ResetLabels", m_ResetButtonsRoot);
 		if (m_ResetLabelsButton)
 			m_ResetLabelsButton.m_OnClicked.Insert(OnResetLabels);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SetupLiveInputTester()
+	{
+		Widget previewPane = m_wRoot.FindAnyWidget("HUDPreviewPane");
+		if (!previewPane)
+			return;
+
+		m_PreviewExtrasRoot = GetGame().GetWorkspace().CreateWidgets(
+			"{6CA52592FD16D476}UI/layouts/Menus/SettingsSubMenus/HOTASPreviewExtras.layout",
+			previewPane
+		);
+		if (!m_PreviewExtrasRoot)
+			return;
+
+		m_LiveInputReadable = RichTextWidget.Cast(m_PreviewExtrasRoot.FindAnyWidget("LiveInputReadable"));
+		m_LiveInputRaw = TextWidget.Cast(m_PreviewExtrasRoot.FindAnyWidget("LiveInputRaw"));
+		UpdateLiveInputTester();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void UpdateLiveInputTester()
+	{
+		if (!m_LiveInputReadable || !m_LiveInputRaw)
+			return;
+
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		int revision = controller.GetLiveInputRevision();
+		if (revision == m_iLastLiveInputRevision)
+			return;
+
+		m_iLastLiveInputRevision = revision;
+		m_LiveInputReadable.SetText(controller.GetLiveInputReadable());
+		m_LiveInputRaw.SetText(controller.GetLiveInputRaw());
 	}
 
 	//------------------------------------------------------------------------------------------------

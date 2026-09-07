@@ -8,9 +8,19 @@ modded class HOTASSettingsSubMenu
 	protected SCR_ButtonTextComponent m_ResetLabelsButton;
 
 	protected Widget m_PreviewExtrasRoot;
+	protected SCR_SpinBoxComponent m_PreviewLighting;
 	protected RichTextWidget m_LiveInputReadable;
 	protected TextWidget m_LiveInputRaw;
 	protected int m_iLastLiveInputRevision = -1;
+
+	protected ImageWidget m_ScreenPreviewImage;
+	protected Widget m_PreviewHudVisualRoot;
+	protected Widget m_PreviewHudBackground;
+	protected RichTextWidget m_PreviewHudInput;
+	protected RichTextWidget m_PreviewHudSeparator;
+	protected RichTextWidget m_PreviewHudAction;
+	protected bool m_bPreviewNight;
+	protected ResourceName m_CurrentPreviewTexture;
 
 	//------------------------------------------------------------------------------------------------
 	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
@@ -18,6 +28,7 @@ modded class HOTASSettingsSubMenu
 		super.OnTabCreate(menuRoot, buttonsLayout, index);
 		SetupResetButtons();
 		SetupLiveInputTester();
+		SetupEnhancedHudPreview();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -29,6 +40,7 @@ modded class HOTASSettingsSubMenu
 		UpdateLiveInputTester();
 		GetGame().GetCallqueue().Remove(UpdateLiveInputTester);
 		GetGame().GetCallqueue().CallLater(UpdateLiveInputTester, 100, true);
+		UpdateHudPositionPreview();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -106,6 +118,63 @@ modded class HOTASSettingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
+	protected void SetupEnhancedHudPreview()
+	{
+		Widget titleWidget = m_wRoot.FindAnyWidget("TitleHUDPreview");
+		if (titleWidget)
+		{
+			SCR_LabelComponent titleLabel = SCR_LabelComponent.Cast(titleWidget.FindHandler(SCR_LabelComponent));
+			if (titleLabel)
+				titleLabel.SetText("HUD Position - Drag Example HUD");
+		}
+
+		m_ScreenPreviewImage = ImageWidget.Cast(m_wRoot.FindAnyWidget("HUDScreenPreviewBackground"));
+		if (m_ScreenPreviewImage)
+			m_ScreenPreviewImage.SetColor(Color.White);
+
+		Widget oldPreviewFill = m_wRoot.FindAnyWidget("HUDPositionPreviewFill");
+		if (oldPreviewFill)
+			oldPreviewFill.SetVisible(false);
+
+		if (m_HudPositionPreview)
+		{
+			m_PreviewHudVisualRoot = GetGame().GetWorkspace().CreateWidgets(
+				"{B87F439E5C1A02D6}UI/layouts/HUD/HOTAS/HOTASHudPreviewSample.layout",
+				m_HudPositionPreview
+			);
+
+			if (m_PreviewHudVisualRoot)
+			{
+				LayoutSlot.SetHorizontalAlign(m_PreviewHudVisualRoot, LayoutHorizontalAlign.Stretch);
+				LayoutSlot.SetVerticalAlign(m_PreviewHudVisualRoot, LayoutVerticalAlign.Stretch);
+
+				m_PreviewHudBackground = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudBackground");
+				m_PreviewHudInput = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudInput"));
+				m_PreviewHudSeparator = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudSeparator"));
+				m_PreviewHudAction = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudAction"));
+			}
+		}
+
+		m_PreviewLighting = FindSpinBox("PreviewLighting");
+		if (m_PreviewLighting)
+		{
+			m_PreviewLighting.ClearAll();
+			m_PreviewLighting.AddItem("Day");
+			m_PreviewLighting.AddItem("Night", true);
+
+			int selectedLighting = 0;
+			if (m_bPreviewNight)
+				selectedLighting = 1;
+
+			m_PreviewLighting.SetCurrentItem(selectedLighting, false, false, false);
+			RefreshSpinBoxArrows(m_PreviewLighting, selectedLighting, 2);
+			m_PreviewLighting.m_OnChanged.Insert(OnPreviewLightingChanged);
+		}
+
+		UpdateHudPositionPreview();
+	}
+
+	//------------------------------------------------------------------------------------------------
 	protected void UpdateLiveInputTester()
 	{
 		if (!m_LiveInputReadable || !m_LiveInputRaw)
@@ -119,6 +188,141 @@ modded class HOTASSettingsSubMenu
 		m_iLastLiveInputRevision = revision;
 		m_LiveInputReadable.SetText(controller.GetLiveInputReadable());
 		m_LiveInputRaw.SetText(controller.GetLiveInputRaw());
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void OnPreviewLightingChanged(SCR_SpinBoxComponent component, int index)
+	{
+		m_bPreviewNight = false;
+		if (index > 0)
+			m_bPreviewNight = true;
+
+		RefreshSpinBoxArrows(component, index, 2);
+		UpdateHudPositionPreview();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override protected void UpdateHudPositionPreview()
+	{
+		super.UpdateHudPositionPreview();
+
+		if (!m_HudPositionPreview)
+			return;
+
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (!workspace)
+			return;
+
+		float screenWidth = workspace.GetWidth();
+		float screenHeight = workspace.GetHeight();
+		if (screenWidth <= 0 || screenHeight <= 0)
+			return;
+
+		if (m_ScreenPreviewImage)
+		{
+			ResourceName previewTexture = GetBestPreviewTexture(screenWidth, screenHeight);
+			if (previewTexture != m_CurrentPreviewTexture)
+			{
+				m_ScreenPreviewImage.LoadImageTexture(0, previewTexture);
+				m_CurrentPreviewTexture = previewTexture;
+			}
+			m_ScreenPreviewImage.SetColor(Color.White);
+			m_ScreenPreviewImage.SetOpacity(1.0);
+		}
+
+		UpdatePreviewHudAppearance(workspace);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected ResourceName GetBestPreviewTexture(float screenWidth, float screenHeight)
+	{
+		int selectedReference = 0;
+		float bestScore = GetPreviewResolutionScore(screenWidth, screenHeight, 1920.0, 1080.0);
+
+		float score = GetPreviewResolutionScore(screenWidth, screenHeight, 2560.0, 1080.0);
+		if (score < bestScore)
+		{
+			bestScore = score;
+			selectedReference = 1;
+		}
+
+		score = GetPreviewResolutionScore(screenWidth, screenHeight, 3440.0, 1440.0);
+		if (score < bestScore)
+			selectedReference = 2;
+
+		if (selectedReference == 0)
+		{
+			if (m_bPreviewNight)
+				return "{2FB1972DA5654A69}UI/Textures/HOTASPreview/HUDPreview_1920x1080-night_UI.edds";
+			return "{595F20E54C4F8D61}UI/Textures/HOTASPreview/HUDPreview_1920x1080-day_UI.edds";
+		}
+
+		if (selectedReference == 1)
+		{
+			if (m_bPreviewNight)
+				return "{D569406EAADAA5B7}UI/Textures/HOTASPreview/HUDPreview_2560x1080-night_UI.edds";
+			return "{424C5CD12385F91A}UI/Textures/HOTASPreview/HUDPreview_2560x1080-day_UI.edds";
+		}
+
+		if (m_bPreviewNight)
+			return "{940895E72C9B439D}UI/Textures/HOTASPreview/HUDPreview_3440x1440-night_UI.edds";
+		return "{0322A239C30882A6}UI/Textures/HOTASPreview/HUDPreview_3440x1440-day_UI.edds";
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected float GetPreviewResolutionScore(float screenWidth, float screenHeight, float referenceWidth, float referenceHeight)
+	{
+		float screenAspect = screenWidth / screenHeight;
+		float referenceAspect = referenceWidth / referenceHeight;
+		float aspectScore = Math.AbsFloat(screenAspect - referenceAspect) * 100.0;
+		float widthScore = Math.AbsFloat(screenWidth - referenceWidth) / Math.Max(screenWidth, 1.0);
+		float heightScore = Math.AbsFloat(screenHeight - referenceHeight) / Math.Max(screenHeight, 1.0);
+		return aspectScore + widthScore + heightScore;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void UpdatePreviewHudAppearance(WorkspaceWidget workspace)
+	{
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+
+		if (m_PreviewHudBackground)
+		{
+			if (controller.IsHudBackgroundEnabled())
+				m_PreviewHudBackground.SetOpacity(controller.GetHudBackgroundOpacity());
+			else
+				m_PreviewHudBackground.SetOpacity(0.0);
+		}
+
+		string inputLabel = controller.GetAxisCustomLabel(0);
+		if (inputLabel.IsEmpty())
+			inputLabel = "Roll";
+
+		if (m_PreviewHudInput)
+			m_PreviewHudInput.SetText(inputLabel + " +");
+		if (m_PreviewHudSeparator)
+			m_PreviewHudSeparator.SetText("|");
+		if (m_PreviewHudAction)
+			m_PreviewHudAction.SetText("Cyclic Right");
+
+		float previewWidthPx;
+		float previewHeightPx;
+		m_HudPositionPreview.GetScreenSize(previewWidthPx, previewHeightPx);
+		float previewHeight = workspace.DPIUnscale(previewHeightPx);
+		int previewFontSize = Math.Round(previewHeight * (26.0 / 70.0));
+		if (previewFontSize < 6)
+			previewFontSize = 6;
+
+		if (m_PreviewHudInput)
+			m_PreviewHudInput.SetExactFontSize(previewFontSize);
+		if (m_PreviewHudSeparator)
+			m_PreviewHudSeparator.SetExactFontSize(previewFontSize);
+		if (m_PreviewHudAction)
+			m_PreviewHudAction.SetExactFontSize(previewFontSize);
+
+		if (controller.IsHudEnabled())
+			m_HudPositionPreview.SetOpacity(1.0);
+		else
+			m_HudPositionPreview.SetOpacity(0.35);
 	}
 
 	//------------------------------------------------------------------------------------------------

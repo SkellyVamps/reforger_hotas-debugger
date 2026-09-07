@@ -9,7 +9,6 @@ VerticalLayoutWidgetClass "{7F73928A2BC0FB9D}" {
    Name "PreviewLightingButtons"
    Slot LayoutSlot "{4FAE352019057EF1}" {
     Padding 8 0 8 10
-    SizeMode Fill
    }
    {
     ButtonWidgetClass "{4DA2B0CC62DF7C13}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {

@@ -5,6 +5,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 	protected SCR_SliderComponent m_HudScaleSlider;
 	protected SCR_SliderComponent m_BackgroundOpacitySlider;
 	protected ref array<SCR_EditBoxComponent> m_AxisLabelEditors = {};
+	protected ref array<SCR_EditBoxComponent> m_FreelookLabelEditors = {};
 	protected ref array<string> m_UserConfigs = {};
 	protected bool m_bLoading;
 
@@ -21,6 +22,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SetupHudControls();
 		SetupHudSliders();
 		SetupAxisLabelEditors();
+		SetupFreelookLabelEditors();
 		m_bLoading = false;
 	}
 
@@ -35,6 +37,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		SyncHudControls();
 		SyncHudSliders();
 		SyncAxisLabelEditors();
+		SyncFreelookLabelEditors();
 		m_bLoading = false;
 	}
 
@@ -184,6 +187,7 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		HOTASDebugController.GetInstance().RefreshAssignedAxes();
 		m_bLoading = true;
 		SyncAxisLabelEditors();
+		SyncFreelookLabelEditors();
 		m_bLoading = false;
 	}
 
@@ -320,6 +324,59 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 				continue;
 
 			HOTASDebugController.GetInstance().SetAxisCustomLabel(i, value);
+			return;
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SetupFreelookLabelEditors()
+	{
+		m_FreelookLabelEditors.Clear();
+		array<string> widgetNames = { "FreelookUpAxis", "FreelookDownAxis", "FreelookRightAxis", "FreelookLeftAxis" };
+		array<string> placeholders = { "e.g. Thumbstick Up", "e.g. Thumbstick Down", "e.g. Thumbstick Right", "e.g. Thumbstick Left" };
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+
+		for (int i = 0; i < widgetNames.Count(); i++)
+		{
+			SCR_EditBoxComponent editor = FindEditBox(widgetNames[i]);
+			m_FreelookLabelEditors.Insert(editor);
+			if (!editor)
+				continue;
+
+			editor.SetLabel(controller.GetFreelookSettingRowLabel(i));
+			editor.SetValue(controller.GetFreelookCustomLabel(i));
+			editor.SetPlaceholderText(placeholders[i]);
+			editor.m_OnConfirm.Insert(OnFreelookLabelConfirmed);
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SyncFreelookLabelEditors()
+	{
+		HOTASDebugController controller = HOTASDebugController.GetInstance();
+		for (int i = 0; i < m_FreelookLabelEditors.Count(); i++)
+		{
+			SCR_EditBoxComponent editor = m_FreelookLabelEditors[i];
+			if (!editor)
+				continue;
+
+			editor.SetLabel(controller.GetFreelookSettingRowLabel(i));
+			editor.SetValue(controller.GetFreelookCustomLabel(i));
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void OnFreelookLabelConfirmed(SCR_EditBoxComponent component, string value)
+	{
+		if (m_bLoading)
+			return;
+
+		for (int i = 0; i < m_FreelookLabelEditors.Count(); i++)
+		{
+			if (m_FreelookLabelEditors[i] != component)
+				continue;
+
+			HOTASDebugController.GetInstance().SetFreelookCustomLabel(i, value);
 			return;
 		}
 	}

@@ -40,39 +40,5 @@ VerticalLayoutWidgetClass "{7F73928A2BC0FB9D}" {
     }
    }
   }
-  VerticalLayoutWidgetClass "{15DE026493DD51E3}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-   Name "TitleLiveInput"
-   Slot LayoutSlot "{14D3ED247220D699}" {
-   }
-   components {
-    SCR_LabelComponent "{03BC66B645EBA451}" {
-     m_sLabel "Live Input Tester"
-     m_fPaddingTop 4
-    }
-   }
-  }
-  RichTextWidgetClass "{8D23EE4BFE04683B}" {
-   Name "LiveInputReadable"
-   Slot LayoutSlot "{1EA83269CCD48F3A}" {
-    Padding 8 6 8 2
-    SizeMode Fill
-   }
-   Color 0.7605 0.3865 0.0802 1
-   Text "Waiting for HOTAS input..."
-   "Font Size" 20
-   FontProperties FontProperties "{676362B1B3E1CCC2}" {
-    Bold 1
-   }
-  }
-  TextWidgetClass "{734547A2D42FF583}" {
-   Name "LiveInputRaw"
-   Slot LayoutSlot "{1AF3209C0CCC2E11}" {
-    Padding 8 2 8 8
-    SizeMode Fill
-   }
-   Color 0.72 0.72 0.72 1
-   Text "Press or move any bound HOTAS control. A vehicle is not required."
-   "Font Size" 14
-  }
  }
 }

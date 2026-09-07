@@ -15,8 +15,8 @@ The mod listens to Reforger input **actions**, resolves the active joystick bind
 - Editable player-facing labels for Roll, Pitch, Throttle, and Yaw
 - Direction-specific Free Look labels for thumbsticks, hats, ministicks, or other controls
 - Detailed debug mode with raw action, binding, and value information
-- Live input tester in the HOTAS settings page
-- Day/night HUD-position preview with resolution/aspect-aware cockpit backgrounds
+- Vehicle-independent live input tester in the HOTAS settings page
+- Large day/night HUD-position preview with resolution/aspect-aware cockpit backgrounds
 - Reset controls for HUD settings and custom labels
 
 ## Normal HUD
@@ -54,7 +54,7 @@ The HUD controls include:
 
 HUD placement is controlled from the preview pane. Drag the example HUD to any point inside the previewed screen. Position is stored as normalized X/Y coordinates so it remains valid across resolutions and HUD scales.
 
-The preview uses the closest supplied reference aspect ratio for the current display and provides a **Day / Night** selector. The example HUD reflects the configured scale, background visibility, background opacity, and custom axis label so users can estimate its final appearance before returning to gameplay.
+The preview expands to use almost the entire available preview pane instead of the older centered square. It selects the closest supplied reference aspect ratio for the current display. Two side-by-side **Day** and **Night** buttons switch the cockpit lighting reference, and the selected button is shown in its toggled state. The example HUD reflects the configured scale, background visibility, background opacity, and custom axis label so users can estimate its final appearance before returning to gameplay.
 
 ### Axis Labels
 
@@ -86,7 +86,9 @@ The settings page provides separate reset actions for HUD presentation settings 
 
 ### Live Input Tester
 
-The live tester appears below the HUD-position preview. While a supported HOTAS action is received, it shows the same readable input/action pair used by the HUD together with raw diagnostic information. This is intended for verifying button numbers, axis directions, custom labels, and action detection without guessing which control Reforger resolved.
+The live tester appears below the HUD-position preview and does **not** require the player to be inside a vehicle. While the HOTAS tab is open, the tester listens for joystick-driven action value changes across the registered Reforger actions. When it identifies a physical joystick button or axis direction, it looks up every registered action that uses the same joystick binding and reports the complete action list.
+
+For example, if the same trigger is assigned to several fire actions, the tester can show the physical input together with all of those raw action names rather than only whichever vehicle context is currently active. This makes the in-game tester behave more like the live binding test in the HOTAS configurator.
 
 ## Settings File
 
@@ -137,13 +139,11 @@ This is useful when adding support for a new controller, aircraft mod, or action
 
 ## How Detection Works
 
-The script registers listeners for supported Reforger actions. When an action fires it:
+The normal HUD and the settings tester deliberately use different filtering rules.
 
-1. Determines the current HOTAS context (turret, helicopter, or fixed-wing).
-2. Queries the active runtime input manager for joystick bindings.
-3. Falls back to the user `InputBinding` object when required.
-4. Converts the resolved binding into a readable label.
-5. Displays the readable input and action in the HUD and live tester.
+For the **normal gameplay HUD**, the script registers the supported HOTAS actions, determines the current turret/helicopter/fixed-wing context, resolves the active joystick binding, converts it into a readable label, and displays only actions appropriate to the current vehicle context.
+
+For the **Live Input Tester**, vehicle-context filtering is disabled. While the HOTAS tab is visible, the controller indexes joystick bindings for all registered Reforger actions and listens for joystick-driven action value changes. The detected physical binding is then matched against that index so every action sharing the same button or axis direction can be displayed together.
 
 The mod is client-side and does not change gameplay state or alter the physical joystick binding simply to display a custom name.
 
@@ -152,13 +152,18 @@ The mod is client-side and does not change gameplay state or alter the physical 
 ```text
 Scripts/Game/HOTASDebugger/
   HOTASDebugger.c
+  HOTASControllerEnhancements.c
   HOTASSettingsTab.c
+  HOTASSettingsEnhancements.c
 
 UI/layouts/HUD/HOTAS/
   HOTASInputHUD.layout
+  HOTASHudPreviewSample.layout
 
 UI/layouts/Menus/SettingsSubMenus/
   HOTASSettings.layout
+  HOTASPreviewExtras.layout
+  HOTASResetButtons.layout
 
 UI/Textures/HOTASPreview/
   preview reference images
@@ -175,7 +180,7 @@ UI/Textures/HOTASPreview/
 
 ## Current Limitation
 
-The engine action callback identifies the action that fired, but an action can have multiple bindings. The mod queries the joystick binding(s) currently assigned to that action and, where the action exposes direction through its value, selects the appropriate directional binding. This is more reliable than assuming a specific physical HOTAS layout, but unusual multi-binding configurations can still be ambiguous.
+The engine action callback identifies the action whose value changed but does not directly identify which alternative binding caused that change when one action has multiple joystick bindings. The tester therefore resolves the primary joystick binding available for that action and matches it against the full binding index. Typical one-control-per-action HOTAS configurations are unambiguous; unusual actions with several alternative joystick bindings can still require manual verification.
 
 ## License
 

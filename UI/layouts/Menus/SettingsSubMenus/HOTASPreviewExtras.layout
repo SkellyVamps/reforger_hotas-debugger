@@ -5,6 +5,21 @@ VerticalLayoutWidgetClass "{7F73928A2BC0FB9D}" {
   SizeMode Fill
  }
  {
+  ButtonWidgetClass "{5D9A7E31C64B2081}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+   Name "PreviewLighting"
+   Slot LayoutSlot "{5D9A7E31C64B2082}" {
+    Padding 4 2 4 8
+   }
+   components {
+    SCR_SpinBoxComponent "{5D9A7E31C64B2083}" {
+     m_sLabel "Preview Lighting"
+     m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+     m_bUseLightArrows 1
+     m_bShowHints 0
+     m_bCycleMode 0
+    }
+   }
+  }
   VerticalLayoutWidgetClass "{15DE026493DD51E3}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
    Name "TitleLiveInput"
    Slot LayoutSlot "{14D3ED247220D699}" {

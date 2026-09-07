@@ -101,7 +101,7 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
            Slot OverlayWidgetSlot "{B45D7E926AF13C99}" {
             HorizontalAlign 3
             VerticalAlign 3
-            Padding 10 0 10 0
+            Padding 10 0 38 0
            }
            Color 1 0.79 0.38 1
            Text "Unassigned"
@@ -112,6 +112,29 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
            Wrap 0
            FontProperties FontProperties "{B45D7E926AF13C9A}" {
             Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+           }
+          }
+          SizeLayoutWidgetClass "{B45D7E926AF13CB0}" {
+           Name "ConfirmIconSize"
+           Slot OverlayWidgetSlot "{B45D7E926AF13CB1}" {
+            HorizontalAlign 2
+            VerticalAlign 1
+            Padding 0 0 8 0
+           }
+           AllowWidthOverride 1
+           WidthOverride 24
+           AllowHeightOverride 1
+           HeightOverride 24
+           {
+            ImageWidgetClass "{B45D7E926AF13CB2}" {
+             Name "BindingConfirmedIcon"
+             Slot AlignableSlot "{B45D7E926AF13CB3}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+             Color 1 1 1 1
+             Opacity 0
+            }
            }
           }
           ButtonWidgetClass "{B45D7E926AF13C9B}" {
@@ -150,45 +173,24 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
              }
              Color 0.82 0.82 0.78 0.92
             }
-            FrameWidgetClass "{B45D7E926AF13CA6}" {
-             Name "TrashIcon"
+            SizeLayoutWidgetClass "{B45D7E926AF13CA6}" {
+             Name "TrashIconSize"
              Slot OverlayWidgetSlot "{B45D7E926AF13CA7}" {
               HorizontalAlign 1
               VerticalAlign 1
              }
+             AllowWidthOverride 1
+             WidthOverride 28
+             AllowHeightOverride 1
+             HeightOverride 28
              {
               ImageWidgetClass "{B45D7E926AF13CA8}" {
-               Name "TrashBody"
-               Slot FrameWidgetSlot "{B45D7E926AF13CA9}" {
-                PositionX 12
-                PositionY 15
-                SizeX 18
-                SizeY 18
-                Alignment 0 0
+               Name "TrashIconImage"
+               Slot AlignableSlot "{B45D7E926AF13CA9}" {
+                HorizontalAlign 3
+                VerticalAlign 3
                }
-               Color 0.03 0.03 0.03 1
-              }
-              ImageWidgetClass "{B45D7E926AF13CAA}" {
-               Name "TrashLid"
-               Slot FrameWidgetSlot "{B45D7E926AF13CAB}" {
-                PositionX 9
-                PositionY 11
-                SizeX 24
-                SizeY 3
-                Alignment 0 0
-               }
-               Color 0.03 0.03 0.03 1
-              }
-              ImageWidgetClass "{B45D7E926AF13CAC}" {
-               Name "TrashHandle"
-               Slot FrameWidgetSlot "{B45D7E926AF13CAD}" {
-                PositionX 17
-                PositionY 7
-                SizeX 8
-                SizeY 3
-                Alignment 0 0
-               }
-               Color 0.03 0.03 0.03 1
+               Color 1 1 1 1
               }
              }
             }

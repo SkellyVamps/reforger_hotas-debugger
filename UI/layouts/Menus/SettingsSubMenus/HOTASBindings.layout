@@ -1,164 +1,305 @@
-VerticalLayoutWidgetClass "{A7B3D419C82E6F11}" {
+HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
  Name "HOTASBindingsRoot"
  components {
   HOTASBindingsSubMenu "{A7B3D419C82E6F12}" {
   }
  }
  {
-  ScrollLayoutWidgetClass "{A7B3D419C82E6F13}" {
-   Name "BindingsScroll"
+  VerticalLayoutWidgetClass "{A7B3D419C82E6F13}" {
+   Name "VerticalLayoutMain"
    Slot LayoutSlot "{A7B3D419C82E6F14}" {
-    Padding 18 72 18 24
+    Padding -2 0 0 0
+    SizeMode Fill
+    FillWeight 1.433
+   }
+   {
+    ButtonWidgetClass "{A7B3D419C82E6F15}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+     Name "CategoriesBox"
+     Slot LayoutSlot "{A7B3D419C82E6F16}" {
+      HorizontalAlign 3
+      Padding 2 0 1 4
+     }
+     components {
+      SCR_SpinBoxComponent "{A7B3D419C82E6F17}" {
+       m_bUseLabel 0
+       m_sLabel "HOTAS Category"
+       m_fSizeWithLabel 52
+       m_fSizeWithoutLabel 52
+       m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+       m_bUseLightArrows 0
+       m_bShowHints 0
+       m_bCycleMode 1
+      }
+     }
+    }
+    HorizontalLayoutWidgetClass "{A7B3D419C82E6F18}" {
+     Name "ColumnHeaders"
+     Slot LayoutSlot "{A7B3D419C82E6F19}" {
+      Padding 22 10 18 2
+     }
+     {
+      TextWidgetClass "{A7B3D419C82E6F1A}" {
+       Name "ActionHeader"
+       Slot LayoutSlot "{A7B3D419C82E6F1B}" {
+        SizeMode Fill
+        FillWeight 1.45
+       }
+       Text "Action"
+       "Font Size" 18
+       "Min Font Size" 16
+       FontProperties FontProperties "{A7B3D419C82E6F1C}" {
+        Bold 1
+       }
+      }
+      TextWidgetClass "{A7B3D419C82E6F1D}" {
+       Name "BindingHeader"
+       Slot LayoutSlot "{A7B3D419C82E6F1E}" {
+        SizeMode Fill
+        FillWeight 1
+       }
+       Text "Joystick Binding"
+       "Font Size" 18
+       "Min Font Size" 16
+       FontProperties FontProperties "{A7B3D419C82E6F1F}" {
+        Bold 1
+       }
+      }
+     }
+    }
+    ScrollLayoutWidgetClass "{A7B3D419C82E6F20}" {
+     Name "ActionRowScroll"
+     Slot LayoutSlot "{A7B3D419C82E6F21}" {
+      Padding 0 4 1 0
+      SizeMode Fill
+      FillWeight 25
+     }
+     Color 0.761 0.392 0.078 1
+     components {
+      SCR_GamepadScrollComponent "{A7B3D419C82E6F22}" {
+      }
+     }
+     style Small
+     {
+      VerticalLayoutWidgetClass "{A7B3D419C82E6F23}" {
+       Name "ActionRowsContent"
+       Slot AlignableSlot "{A7B3D419C82E6F24}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+        Padding -4 0 10 12
+       }
+      }
+     }
+    }
+   }
+  }
+  OverlayWidgetClass "{A7B3D419C82E6F30}" {
+   Name "DescriptionOverlay"
+   Slot LayoutSlot "{A7B3D419C82E6F31}" {
     SizeMode Fill
     FillWeight 1
    }
-   Color 0.761 0.392 0.078 1
-   components {
-    SCR_GamepadScrollComponent "{A7B3D419C82E6F15}" {
-    }
-   }
-   style Small
    {
-    VerticalLayoutWidgetClass "{A7B3D419C82E6F16}" {
-     Name "Content"
-     Slot AlignableSlot "{A7B3D419C82E6F17}" {
+    VerticalLayoutWidgetClass "{A7B3D419C82E6F32}" {
+     Name "DescriptionMain"
+     Slot OverlayWidgetSlot "{A7B3D419C82E6F33}" {
       HorizontalAlign 3
       VerticalAlign 3
-      Padding 8 0 8 24
+      Padding 56 76 24 20
      }
      {
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F18}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "TitleManaged"
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F19}" {
-         m_sLabel "Managed HOTAS Config"
-         m_fPaddingTop 4
+      OverlayWidgetClass "{A7B3D419C82E6F34}" {
+       Name "DescriptionHeaderWrapper"
+       Slot LayoutSlot "{A7B3D419C82E6F35}" {
+       }
+       Clipping True
+       {
+        TextWidgetClass "{A7B3D419C82E6F36}" {
+         Name "DescriptionHeader"
+         Slot OverlayWidgetSlot "{A7B3D419C82E6F37}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+          Padding 0 0 0 4
+         }
+         Text "HOTAS Bindings"
+         "Font Size" 24
+         "Min Font Size" 20
+         FontProperties FontProperties "{A7B3D419C82E6F38}" {
+          Bold 1
+         }
         }
        }
       }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F1A}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "ManagedConfigStatus"
-       Slot LayoutSlot "{A7B3D419C82E6F1B}" { Padding 4 2 4 8 }
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F1C}" {
-         m_sLabel "Managed file: HOTAS_Config.conf"
-         m_fPaddingTop 2
-        }
+      RichTextWidgetClass "{A7B3D419C82E6F39}" {
+       Name "Description"
+       Slot LayoutSlot "{A7B3D419C82E6F3A}" {
+        Padding 0 14 0 10
        }
+       Color 0.72 0.72 0.7 1
+       Text "Select an action to view its managed HOTAS binding."
+       "Font Size" 17
+       "Min Font Size" 14
+       Wrap 1
+       "Line Spacing" 70
       }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F20}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "TitleImport"
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F21}" {
-         m_sLabel "Read-Only Import"
-         m_fPaddingTop 12
-        }
-       }
-      }
-      ButtonWidgetClass "{A7B3D419C82E6F22}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
-       Name "ImportConfig"
-       Slot LayoutSlot "{A7B3D419C82E6F23}" { Padding 4 4 4 4 }
-       components {
-        SCR_SpinBoxComponent "{A7B3D419C82E6F24}" {
-         m_sLabel "Import Existing Config"
-         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
-         m_bUseLightArrows 1
-         m_bShowHints 0
-         m_bCycleMode 0
-        }
-       }
-      }
-      ButtonWidgetClass "{A7B3D419C82E6F25}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
-       Name "ImportSelected"
-       Slot LayoutSlot "{A7B3D419C82E6F26}" { Padding 4 2 4 2 SizeMode Fill }
-       components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F27}" { m_sText "Import Selected Into HOTAS Config" }
-       }
-      }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F30}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "TitleEditor"
-       components {
-        SCR_LabelComponent "{A7B3D419C82E6F31}" {
-         m_sLabel "Binding Editor"
-         m_fPaddingTop 12
-        }
-       }
-      }
-      ButtonWidgetClass "{A7B3D419C82E6F32}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
-       Name "BindingAction"
-       Slot LayoutSlot "{A7B3D419C82E6F33}" { Padding 4 4 4 4 }
-       components {
-        SCR_SpinBoxComponent "{A7B3D419C82E6F34}" {
-         m_sLabel "Action"
-         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
-         m_bUseLightArrows 1
-         m_bShowHints 0
-         m_bCycleMode 0
-        }
-       }
-      }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F35}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
+      VerticalLayoutWidgetClass "{A7B3D419C82E6F3B}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "CurrentBinding"
-       Slot LayoutSlot "{A7B3D419C82E6F36}" { Padding 4 4 4 8 }
+       Slot LayoutSlot "{A7B3D419C82E6F3C}" {
+        Padding 0 4 0 8
+       }
        components {
-        SCR_LabelComponent "{A7B3D419C82E6F37}" {
+        SCR_LabelComponent "{A7B3D419C82E6F3D}" {
          m_sLabel "Current binding: Unassigned"
          m_fPaddingTop 2
         }
        }
       }
-      ButtonWidgetClass "{A7B3D419C82E6F38}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
-       Name "BindInput"
-       Slot LayoutSlot "{A7B3D419C82E6F39}" { Padding 4 2 4 2 SizeMode Fill }
-       components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F3A}" { m_sText "Bind Input" }
+      HorizontalLayoutWidgetClass "{A7B3D419C82E6F3E}" {
+       Name "BindingButtons"
+       Slot LayoutSlot "{A7B3D419C82E6F3F}" {
+        Padding 0 4 0 4
+       }
+       {
+        ButtonWidgetClass "{A7B3D419C82E6F40}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+         Name "BindInput"
+         Slot LayoutSlot "{A7B3D419C82E6F41}" {
+          Padding 0 0 4 0
+          SizeMode Fill
+          FillWeight 1
+         }
+         components {
+          SCR_ButtonTextComponent "{A7B3D419C82E6F42}" {
+           m_sText "Bind Input"
+          }
+         }
+        }
+        ButtonWidgetClass "{A7B3D419C82E6F43}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+         Name "ClearBinding"
+         Slot LayoutSlot "{A7B3D419C82E6F44}" {
+          Padding 4 0 0 0
+          SizeMode Fill
+          FillWeight 1
+         }
+         components {
+          SCR_ButtonTextComponent "{A7B3D419C82E6F45}" {
+           m_sText "Clear Binding"
+          }
+         }
+        }
        }
       }
-      ButtonWidgetClass "{A7B3D419C82E6F3B}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
-       Name "ClearBinding"
-       Slot LayoutSlot "{A7B3D419C82E6F3C}" { Padding 4 2 4 2 SizeMode Fill }
-       components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F3D}" { m_sText "Clear Selected Binding" }
-       }
-      }
-      ButtonWidgetClass "{A7B3D419C82E6F3E}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+      ButtonWidgetClass "{A7B3D419C82E6F46}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
        Name "CancelCapture"
-       Slot LayoutSlot "{A7B3D419C82E6F3F}" { Padding 4 2 4 2 SizeMode Fill }
+       Slot LayoutSlot "{A7B3D419C82E6F47}" {
+        Padding 0 2 0 6
+        SizeMode Fill
+       }
        components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F40}" { m_sText "Cancel Input Capture" }
+        SCR_ButtonTextComponent "{A7B3D419C82E6F48}" {
+         m_sText "Cancel Input Capture"
+        }
        }
       }
-      VerticalLayoutWidgetClass "{A7B3D419C82E6F41}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
+      VerticalLayoutWidgetClass "{A7B3D419C82E6F49}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
        Name "EditorStatus"
-       Slot LayoutSlot "{A7B3D419C82E6F42}" { Padding 4 6 4 10 }
+       Slot LayoutSlot "{A7B3D419C82E6F4A}" {
+        Padding 0 4 0 12
+       }
        components {
-        SCR_LabelComponent "{A7B3D419C82E6F43}" {
+        SCR_LabelComponent "{A7B3D419C82E6F4B}" {
          m_sLabel "Ready."
          m_fPaddingTop 2
         }
        }
       }
       VerticalLayoutWidgetClass "{A7B3D419C82E6F50}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
-       Name "TitleManagement"
+       Name "TitleImport"
        components {
         SCR_LabelComponent "{A7B3D419C82E6F51}" {
-         m_sLabel "Config Management"
+         m_sLabel "Read-Only Import"
          m_fPaddingTop 12
         }
        }
       }
-      ButtonWidgetClass "{A7B3D419C82E6F52}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
-       Name "ActivateManaged"
-       Slot LayoutSlot "{A7B3D419C82E6F53}" { Padding 4 2 4 2 SizeMode Fill }
+      ButtonWidgetClass "{A7B3D419C82E6F52}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+       Name "ImportConfig"
+       Slot LayoutSlot "{A7B3D419C82E6F53}" {
+        Padding 0 4 0 4
+       }
        components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F54}" { m_sText "Activate HOTAS Config" }
+        SCR_SpinBoxComponent "{A7B3D419C82E6F54}" {
+         m_sLabel "Import Existing Config"
+         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
+         m_bUseLightArrows 0
+         m_bShowHints 0
+         m_bCycleMode 1
+        }
        }
       }
       ButtonWidgetClass "{A7B3D419C82E6F55}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
-       Name "ResetManaged"
-       Slot LayoutSlot "{A7B3D419C82E6F56}" { Padding 4 2 4 12 SizeMode Fill }
+       Name "ImportSelected"
+       Slot LayoutSlot "{A7B3D419C82E6F56}" {
+        Padding 0 2 0 8
+        SizeMode Fill
+       }
        components {
-        SCR_ButtonTextComponent "{A7B3D419C82E6F57}" { m_sText "Reset HOTAS Config" }
+        SCR_ButtonTextComponent "{A7B3D419C82E6F57}" {
+         m_sText "Import Selected Into HOTAS Config"
+        }
+       }
+      }
+      VerticalLayoutWidgetClass "{A7B3D419C82E6F58}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
+       Name "TitleManagement"
+       components {
+        SCR_LabelComponent "{A7B3D419C82E6F59}" {
+         m_sLabel "Managed HOTAS Config"
+         m_fPaddingTop 12
+        }
+       }
+      }
+      VerticalLayoutWidgetClass "{A7B3D419C82E6F5A}" : "{FEEEB639F2735BA1}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsTitle.layout" {
+       Name "ManagedConfigStatus"
+       Slot LayoutSlot "{A7B3D419C82E6F5B}" {
+        Padding 0 2 0 6
+       }
+       components {
+        SCR_LabelComponent "{A7B3D419C82E6F5C}" {
+         m_sLabel "Managed file: HOTAS_Config.conf"
+         m_fPaddingTop 2
+        }
+       }
+      }
+      HorizontalLayoutWidgetClass "{A7B3D419C82E6F5D}" {
+       Name "ManagementButtons"
+       Slot LayoutSlot "{A7B3D419C82E6F5E}" {
+        Padding 0 2 0 0
+       }
+       {
+        ButtonWidgetClass "{A7B3D419C82E6F5F}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+         Name "ActivateManaged"
+         Slot LayoutSlot "{A7B3D419C82E6F60}" {
+          Padding 0 0 4 0
+          SizeMode Fill
+          FillWeight 1
+         }
+         components {
+          SCR_ButtonTextComponent "{A7B3D419C82E6F61}" {
+           m_sText "Activate HOTAS Config"
+          }
+         }
+        }
+        ButtonWidgetClass "{A7B3D419C82E6F62}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+         Name "ResetManaged"
+         Slot LayoutSlot "{A7B3D419C82E6F63}" {
+          Padding 4 0 0 0
+          SizeMode Fill
+          FillWeight 1
+         }
+         components {
+          SCR_ButtonTextComponent "{A7B3D419C82E6F64}" {
+           m_sText "Reset HOTAS Config"
+          }
+         }
+        }
        }
       }
      }

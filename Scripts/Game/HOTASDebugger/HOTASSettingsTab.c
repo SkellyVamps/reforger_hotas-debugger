@@ -439,7 +439,11 @@ class HOTASSettingsSubMenu : SCR_SettingsSubMenuBase
 		Widget background = buttonWidget.FindAnyWidget("BackgroundImage");
 		if (background)
 			background.SetVisible(true);
-		buttonWidget.SetOpacity(enabled ? 1.0 : 0.35);
+
+		if (enabled)
+			buttonWidget.SetOpacity(1.0);
+		else
+			buttonWidget.SetOpacity(0.35);
 	}
 
 	//------------------------------------------------------------------------------------------------

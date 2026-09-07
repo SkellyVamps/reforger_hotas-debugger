@@ -2,15 +2,6 @@
 // Controller-side helpers used by the native HOTAS settings page.
 modded class HOTASDebugController
 {
-	protected int m_iLiveInputRevision;
-	protected string m_sLiveInputReadable = "Waiting for HOTAS input...";
-	protected string m_sLiveInputRaw = "Press or move any bound HOTAS control. A vehicle is not required.";
-
-	protected bool m_bLiveInputTesterActive;
-	protected ref array<string> m_LiveTestActions = {};
-	protected ref array<string> m_LiveTestBindingIndex = {};
-	protected ref array<string> m_LiveTestBindingActionIndex = {};
-
 	//------------------------------------------------------------------------------------------------
 	// When no settings file exists yet, let the base controller create its normal defaults,
 	// then apply the player-facing label defaults used by the current settings UI.
@@ -69,250 +60,26 @@ modded class HOTASDebugController
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// The normal HUD still uses the base context filtering. The settings tester is separate:
-	// while the HOTAS tab is visible it listens to every registered action and then looks up
-	// every action sharing the same joystick binding, similar to the configurator's live test.
-	void SetLiveInputTesterActive(bool active)
+	// Return the same player-facing binding text that the real HUD would use for a
+	// forward cyclic/pitch input. This lets the settings preview use the current axis
+	// assignment and custom Pitch label rather than a hard-coded placeholder.
+	string GetPitchForwardPreviewInput()
 	{
-		if (m_bLiveInputTesterActive == active)
-			return;
-
-		m_bLiveInputTesterActive = active;
-		if (!m_InputManager)
-			return;
-
-		if (active)
+		string bindingsText = GetJoystickBindings("HelicopterCyclicForward");
+		if (bindingsText != "Non-Joystick Input" && bindingsText != "InputManager unavailable")
 		{
-			BuildLiveInputBindingIndex();
-			RegisterLiveInputListeners();
-		}
-		else
-		{
-			UnregisterLiveInputListeners();
-			m_LiveTestBindingIndex.Clear();
-			m_LiveTestBindingActionIndex.Clear();
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void BuildLiveInputBindingIndex()
-	{
-		m_LiveTestBindingIndex.Clear();
-		m_LiveTestBindingActionIndex.Clear();
-
-		if (!m_InputManager)
-			return;
-
-		int actionCount = m_InputManager.GetActionCount();
-		for (int i = 0; i < actionCount; i++)
-		{
-			string actionName = m_InputManager.GetActionName(i);
-			if (actionName.IsEmpty())
-				continue;
-
-			string bindingsText = GetJoystickBindings(actionName);
-			if (bindingsText == "Non-Joystick Input" || bindingsText == "InputManager unavailable")
-				continue;
-
-			ref array<string> bindings = {};
-			bindingsText.Split(" / ", bindings, true);
-			foreach (string binding : bindings)
-			{
-				binding = binding.Trim();
-				if (binding.IndexOf(":button") < 0 && binding.IndexOf(":axis") < 0)
-					continue;
-
-				m_LiveTestBindingIndex.Insert(binding);
-				m_LiveTestBindingActionIndex.Insert(actionName);
-			}
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void RegisterLiveInputListeners()
-	{
-		m_LiveTestActions.Clear();
-		if (!m_InputManager)
-			return;
-
-		int actionCount = m_InputManager.GetActionCount();
-		for (int i = 0; i < actionCount; i++)
-		{
-			string actionName = m_InputManager.GetActionName(i);
-			if (actionName.IsEmpty())
-				continue;
-
-			m_InputManager.AddActionListener(actionName, EActionTrigger.VALUE, OnLiveInputActionValue);
-			m_LiveTestActions.Insert(actionName);
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void UnregisterLiveInputListeners()
-	{
-		if (m_InputManager)
-		{
-			foreach (string actionName : m_LiveTestActions)
-				m_InputManager.RemoveActionListener(actionName, EActionTrigger.VALUE, OnLiveInputActionValue);
+			string readable = MakeReadableBinding(bindingsText, "HelicopterCyclicForward");
+			if (!readable.IsEmpty())
+				return readable;
 		}
 
-		m_LiveTestActions.Clear();
-	}
+		string pitchLabel = m_sPitchAxisLabel;
+		if (pitchLabel.IsEmpty())
+			pitchLabel = "Pitch";
 
-	//------------------------------------------------------------------------------------------------
-	protected void OnLiveInputActionValue(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
-	{
-		if (!m_bLiveInputTesterActive || !m_InputManager)
-			return;
-		if (m_InputManager.GetLastUsedInputDevice() != EInputDeviceType.JOYSTICK)
-			return;
-		if (value > -0.001 && value < 0.001)
-			return;
-
-		CaptureLiveInput(value, actionName);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Keep the existing watched-action callback feeding the tester as a fallback. The normal
-	// HUD processing remains in super.OnActionTriggered() and therefore keeps vehicle/context rules.
-	override protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
-	{
-		if (m_bLiveInputTesterActive)
-			CaptureLiveInput(value, actionName);
-		super.OnActionTriggered(value, reason, actionName);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected string GetPrimaryLiveInputBinding(string bindingsText, float value, string actionName)
-	{
-		if (UsesDirectionalValueListener(actionName))
-			bindingsText = GetDirectionalBindingForValue(bindingsText, value);
-
-		ref array<string> bindings = {};
-		bindingsText.Split(" / ", bindings, true);
-		foreach (string binding : bindings)
-		{
-			binding = binding.Trim();
-			if (binding.IndexOf(":button") >= 0 || binding.IndexOf(":axis") >= 0)
-				return binding;
-		}
-
-		return string.Empty;
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected bool BindingHasPositiveDirection(string binding)
-	{
-		return binding.EndsWith("+");
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected bool BindingHasNegativeDirection(string binding)
-	{
-		return binding.EndsWith("-");
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected bool LiveBindingsMatch(string triggeredBinding, string candidateBinding, float value)
-	{
-		if (triggeredBinding == candidateBinding)
-			return true;
-
-		bool triggeredAxis = triggeredBinding.IndexOf(":axis") >= 0;
-		bool candidateAxis = candidateBinding.IndexOf(":axis") >= 0;
-		if (!triggeredAxis || !candidateAxis)
-			return false;
-
-		if (NormalizeAxisBinding(triggeredBinding) != NormalizeAxisBinding(candidateBinding))
-			return false;
-
-		bool triggeredPositive = BindingHasPositiveDirection(triggeredBinding);
-		bool triggeredNegative = BindingHasNegativeDirection(triggeredBinding);
-		bool candidatePositive = BindingHasPositiveDirection(candidateBinding);
-		bool candidateNegative = BindingHasNegativeDirection(candidateBinding);
-
-		// A full-range axis binding represents the same physical axis as either directional
-		// binding. When the trigger itself is full-range, use its current sign to avoid also
-		// reporting the opposite directional action.
-		if (!candidatePositive && !candidateNegative)
-			return true;
-
-		if (triggeredPositive)
-			return candidatePositive;
-		if (triggeredNegative)
-			return candidateNegative;
-
-		if (value < 0.0)
-			return candidateNegative;
-		return candidatePositive;
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected string GetAllActionsForLiveBinding(string triggeredBinding, float value)
-	{
-		ref array<string> matchedActions = {};
-
-		for (int i = 0; i < m_LiveTestBindingIndex.Count(); i++)
-		{
-			if (!LiveBindingsMatch(triggeredBinding, m_LiveTestBindingIndex[i], value))
-				continue;
-
-			string actionName = m_LiveTestBindingActionIndex[i];
-			if (!matchedActions.Contains(actionName))
-				matchedActions.Insert(actionName);
-		}
-
-		string result;
-		foreach (string matchedAction : matchedActions)
-		{
-			if (!result.IsEmpty())
-				result += " / ";
-			result += matchedAction;
-		}
-
-		return result;
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void CaptureLiveInput(float value, string actionName)
-	{
-		if (!m_bLiveInputTesterActive || actionName.IsEmpty())
-			return;
-
-		bool directionalValueAction = UsesDirectionalValueListener(actionName);
-		if (directionalValueAction && value > -0.001 && value < 0.001)
-			return;
-
-		string bindingsText = GetJoystickBindings(actionName);
-		if (bindingsText == "Non-Joystick Input" || bindingsText == "InputManager unavailable")
-			return;
-
-		string liveBinding = GetPrimaryLiveInputBinding(bindingsText, value, actionName);
-		if (liveBinding.IsEmpty())
-			return;
-
-		string boundActions = GetAllActionsForLiveBinding(liveBinding, value);
-		if (boundActions.IsEmpty())
-			boundActions = actionName;
-
-		m_sLiveInputReadable = MakeReadableBinding(liveBinding, actionName);
-		m_sLiveInputRaw = string.Format("Bound actions: %1\nRaw input: %2  |  value=%3", boundActions, liveBinding, value.ToString(2));
-		m_iLiveInputRevision++;
-	}
-
-	int GetLiveInputRevision()
-	{
-		return m_iLiveInputRevision;
-	}
-
-	string GetLiveInputReadable()
-	{
-		return m_sLiveInputReadable;
-	}
-
-	string GetLiveInputRaw()
-	{
-		return m_sLiveInputRaw;
+		// Forward pitch is normally the negative half of the configured pitch axis.
+		// This is only a fallback for cases where the runtime binding cannot be queried.
+		return pitchLabel + " -";
 	}
 
 	// Preview-facing accessors. Keeping these here avoids duplicating controller state in UI code.

@@ -174,7 +174,7 @@ OverlayWidgetClass {
               HorizontalAlign 3
               VerticalAlign 3
              }
-             Color 0.82 0.82 0.78 0.92
+             Color 0.0262 0.0262 0.0252 0.7062
             }
             SizeLayoutWidgetClass "{B45D7E926AF13CA6}" {
              Name "TrashIconSize"

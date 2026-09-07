@@ -1,96 +1,14 @@
 //------------------------------------------------------------------------------------------------
-// Final preview rendering fixes: keep the draggable ButtonWidget as an invisible hit target,
-// render the HUD sample as a sibling so it is not tinted/hidden by the button, and constrain
-// the Day/Night controls to a normal settings-row height.
+// Final preview rendering fixes. Only override methods that exist on the original
+// HOTASSettingsSubMenu class; helper methods added by another modded class cannot be
+// overridden directly in Enfusion.
 modded class HOTASSettingsSubMenu
 {
 	//------------------------------------------------------------------------------------------------
-	override protected void SetupPreviewControls()
+	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
 	{
-		super.SetupPreviewControls();
-
-		if (!m_PreviewExtrasRoot)
-			return;
-
-		Widget buttonRow = m_PreviewExtrasRoot.FindAnyWidget("PreviewLightingButtons");
-		if (buttonRow)
-			LayoutSlot.SetSizeMode(buttonRow, LayoutSizeMode.Auto);
-
-		LimitPreviewLightingButtonHeight(m_PreviewDayButton);
-		LimitPreviewLightingButtonHeight(m_PreviewNightButton);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void LimitPreviewLightingButtonHeight(SCR_ButtonTextComponent button)
-	{
-		if (!button)
-			return;
-
-		SizeLayoutWidget sizeWidget = FindFirstSizeLayout(button.GetRootWidget());
-		if (!sizeWidget)
-			return;
-
-		sizeWidget.EnableHeightOverride(true);
-		sizeWidget.SetHeightOverride(76);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected SizeLayoutWidget FindFirstSizeLayout(Widget root)
-	{
-		if (!root)
-			return null;
-
-		SizeLayoutWidget sizeWidget = SizeLayoutWidget.Cast(root);
-		if (sizeWidget)
-			return sizeWidget;
-
-		Widget child = root.GetChildren();
-		while (child)
-		{
-			sizeWidget = FindFirstSizeLayout(child);
-			if (sizeWidget)
-				return sizeWidget;
-
-			child = child.GetSibling();
-		}
-
-		return null;
-	}
-
-	//------------------------------------------------------------------------------------------------
-	override protected void SetupEnhancedHudPreview()
-	{
-		super.SetupEnhancedHudPreview();
-
-		if (!m_HudPositionPreview || !m_ScreenPreview)
-			return;
-
-		// The previous implementation created the sample inside the transparent drag button.
-		// Parent tinting/opacity can make all of those children disappear. Remove that instance
-		// and recreate the exact same sample as a sibling inside the screen preview instead.
-		if (m_PreviewHudVisualRoot)
-			m_PreviewHudVisualRoot.RemoveFromHierarchy();
-
-		m_PreviewHudVisualRoot = GetGame().GetWorkspace().CreateWidgets(
-			"{B87F439E5C1A02D6}UI/layouts/HUD/HOTAS/HOTASHudPreviewSample.layout",
-			m_ScreenPreview
-		);
-		if (!m_PreviewHudVisualRoot)
-			return;
-
-		m_PreviewHudVisualRoot.SetIsColorInherited(false);
-		m_PreviewHudVisualRoot.SetZOrder(10);
-		m_HudPositionPreview.SetZOrder(20);
-
-		m_PreviewHudBackground = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudBackground");
-		m_PreviewHudContent = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudContent");
-		m_PreviewHudInput = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudInput"));
-		m_PreviewHudSeparator = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudSeparator"));
-		m_PreviewHudAction = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudAction"));
-
-		WorkspaceWidget workspace = GetGame().GetWorkspace();
-		SyncPreviewHudVisualToDragTarget(workspace);
-		UpdatePreviewHudAppearance(workspace);
+		super.OnTabCreate(menuRoot, buttonsLayout, index);
+		CreateSiblingHudPreview();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -102,12 +20,52 @@ modded class HOTASSettingsSubMenu
 		if (!workspace)
 			return;
 
-		SyncPreviewHudVisualToDragTarget(workspace);
-		UpdatePreviewHudAppearance(workspace);
+		SyncSiblingHudPreview(workspace);
+		ApplySiblingHudPreviewAppearance(workspace);
 	}
 
 	//------------------------------------------------------------------------------------------------
-	protected void SyncPreviewHudVisualToDragTarget(WorkspaceWidget workspace)
+	protected void CreateSiblingHudPreview()
+	{
+		if (!m_HudPositionPreview || !m_ScreenPreview)
+			return;
+
+		// The settings enhancement initially creates the miniature HUD inside the drag
+		// ButtonWidget. A transparent button also affects its children, so recreate the
+		// miniature as a sibling inside HUDScreenPreview instead.
+		if (m_PreviewHudVisualRoot)
+			m_PreviewHudVisualRoot.RemoveFromHierarchy();
+
+		m_PreviewHudVisualRoot = GetGame().GetWorkspace().CreateWidgets(
+			"{B87F439E5C1A02D6}UI/layouts/HUD/HOTAS/HOTASHudPreviewSample.layout",
+			m_ScreenPreview
+		);
+		if (!m_PreviewHudVisualRoot)
+			return;
+
+		m_PreviewHudVisualRoot.SetIsColorInherited(false);
+		m_PreviewHudVisualRoot.SetVisible(true);
+		m_PreviewHudVisualRoot.SetZOrder(10);
+
+		m_PreviewHudBackground = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudBackground");
+		m_PreviewHudContent = m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudContent");
+		m_PreviewHudInput = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudInput"));
+		m_PreviewHudSeparator = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudSeparator"));
+		m_PreviewHudAction = RichTextWidget.Cast(m_PreviewHudVisualRoot.FindAnyWidget("PreviewHudAction"));
+
+		// Keep the existing ButtonWidget purely as the mouse/drag hit target above the
+		// visible sample.
+		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
+		m_HudPositionPreview.SetOpacity(1.0);
+		m_HudPositionPreview.SetZOrder(20);
+
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		SyncSiblingHudPreview(workspace);
+		ApplySiblingHudPreviewAppearance(workspace);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void SyncSiblingHudPreview(WorkspaceWidget workspace)
 	{
 		if (!workspace || !m_PreviewHudVisualRoot || !m_HudPositionPreview || !m_ScreenPreview)
 			return;
@@ -133,24 +91,21 @@ modded class HOTASSettingsSubMenu
 			workspace.DPIUnscale(targetHeight)
 		);
 
-		// Keep the transparent hit target above the visual sample so dragging works anywhere
-		// on the rendered HUD without the sample intercepting the mouse.
+		m_PreviewHudVisualRoot.SetVisible(true);
 		m_PreviewHudVisualRoot.SetZOrder(10);
-		m_HudPositionPreview.SetZOrder(20);
 		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
 		m_HudPositionPreview.SetOpacity(1.0);
+		m_HudPositionPreview.SetZOrder(20);
 	}
 
 	//------------------------------------------------------------------------------------------------
-	override protected void UpdatePreviewHudAppearance(WorkspaceWidget workspace)
+	protected void ApplySiblingHudPreviewAppearance(WorkspaceWidget workspace)
 	{
 		if (!workspace || !m_PreviewHudVisualRoot)
 			return;
 
 		HOTASDebugController controller = HOTASDebugController.GetInstance();
 
-		// Match HOTASInputHUD.layout: the text remains fully opaque while only the dark
-		// background uses the configured Background Opacity value.
 		if (m_PreviewHudBackground)
 		{
 			m_PreviewHudBackground.SetColor(Color.FromInt(0xFF010202));
@@ -195,8 +150,8 @@ modded class HOTASSettingsSubMenu
 		else
 			m_PreviewHudVisualRoot.SetOpacity(0.35);
 
-		// The hit target itself stays invisible and fully active; its sibling above is what
-		// the player sees.
+		// Never use the drag target's opacity to represent the HUD; it remains an invisible,
+		// fully active hit box while the sibling carries all visual opacity.
 		m_HudPositionPreview.SetColor(Color.FromInt(0x00000000));
 		m_HudPositionPreview.SetOpacity(1.0);
 	}

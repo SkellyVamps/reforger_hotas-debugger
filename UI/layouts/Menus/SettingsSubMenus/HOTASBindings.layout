@@ -20,12 +20,11 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
       Padding 2 0 1 4
      }
      components {
-      SCR_SpinBoxComponent "{A7B3D419C82E6F17}" {
+      SCR_SpinBoxComponent "{5472C6CBC0640458}" {
        m_bUseLabel 0
-       m_sLabel "HOTAS Category"
+       m_sLabel ""
        m_fSizeWithLabel 52
        m_fSizeWithoutLabel 52
-       m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
        m_bUseLightArrows 0
        m_bShowHints 0
        m_bCycleMode 1
@@ -41,12 +40,14 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
       TextWidgetClass "{A7B3D419C82E6F1A}" {
        Name "ActionHeader"
        Slot LayoutSlot "{A7B3D419C82E6F1B}" {
+        VerticalAlign 1
         SizeMode Fill
         FillWeight 1.45
        }
        Text "Action"
        "Font Size" 18
        "Min Font Size" 16
+       "Vertical Alignment" Center
        FontProperties FontProperties "{A7B3D419C82E6F1C}" {
         Bold 1
        }
@@ -54,12 +55,14 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
       TextWidgetClass "{A7B3D419C82E6F1D}" {
        Name "BindingHeader"
        Slot LayoutSlot "{A7B3D419C82E6F1E}" {
+        VerticalAlign 1
         SizeMode Fill
         FillWeight 1
        }
        Text "Joystick Binding"
        "Font Size" 18
        "Min Font Size" 16
+       "Vertical Alignment" Center
        FontProperties FontProperties "{A7B3D419C82E6F1F}" {
         Bold 1
        }
@@ -123,6 +126,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
          Text "HOTAS Bindings"
          "Font Size" 24
          "Min Font Size" 20
+         "Vertical Alignment" Center
          FontProperties FontProperties "{A7B3D419C82E6F38}" {
           Bold 1
          }
@@ -195,7 +199,7 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
        }
        components {
         SCR_ButtonTextComponent "{A7B3D419C82E6F48}" {
-         m_sText "Cancel Input Capture"
+         m_sText "Cancel Input Capture (Esc)"
         }
        }
       }
@@ -220,19 +224,11 @@ HorizontalLayoutWidgetClass "{A7B3D419C82E6F11}" {
         }
        }
       }
-      ButtonWidgetClass "{A7B3D419C82E6F52}" : "{C9DF0E6590F6C388}UI/layouts/WidgetLibrary/SpinBox/WLib_SpinBox.layout" {
+      ButtonWidgetClass "{A7B3D419C82E6F52}" : "{4B5AE6E64037FFB4}UI/layouts/WidgetLibrary/ComboBox/WLib_ComboBox.layout" {
        Name "ImportConfig"
        Slot LayoutSlot "{A7B3D419C82E6F53}" {
         Padding 0 4 0 4
-       }
-       components {
-        SCR_SpinBoxComponent "{A7B3D419C82E6F54}" {
-         m_sLabel "Import Existing Config"
-         m_sLabelLayout "{F003823FF141983C}UI/layouts/Menus/SettingsMenu/CustomWidgets/SettingsLabel.layout"
-         m_bUseLightArrows 0
-         m_bShowHints 0
-         m_bCycleMode 1
-        }
+        SizeMode Fill
        }
       }
       ButtonWidgetClass "{A7B3D419C82E6F55}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {

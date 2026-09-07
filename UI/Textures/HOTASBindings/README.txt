@@ -1,0 +1,1 @@
+Temporary source texture metadata folder for HOTAS binding editor icons.

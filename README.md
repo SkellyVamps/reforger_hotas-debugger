@@ -10,13 +10,14 @@ The mod listens to Reforger input **actions**, resolves the active joystick bind
 - Automatic discovery of the active HOTAS/custom input configuration
 - Compact fading input HUD
 - Exact draggable HUD positioning instead of fixed screen anchors
+- DPI-correct HUD placement across different viewport sizes and UI scales
 - HUD scale, fade timing, background visibility, and background opacity controls
 - Automatic Roll, Pitch, Throttle, and Yaw axis detection from the active input configuration
 - Editable player-facing labels for Roll, Pitch, Throttle, and Yaw
 - Direction-specific Free Look labels for thumbsticks, hats, ministicks, or other controls
 - Detailed debug mode with raw action, binding, and value information
 - Large day/night HUD-position preview with resolution/aspect-aware cockpit backgrounds
-- Preview sample that mirrors the real HUD background, opacity, scale, and Pitch label
+- Static Pitch Forward sample that mirrors the real HUD background, opacity, scale, and Pitch label
 - Reset controls for HUD settings and custom labels
 
 ## Normal HUD
@@ -26,7 +27,7 @@ Normal mode converts Reforger binding strings into readable input names. Example
 ```text
 BUTTON 27   |   Next Weapon
 ROLL -      |   Cyclic Left
-Thumbstick Right   |   Free Look Right
+Thumb Right |   Free Look Right
 ```
 
 Buttons are shown using 1-based numbering for readability. Known flight axes use the custom labels configured in Settings. Unknown axes fall back to `AXIS N+/-` rather than being mislabeled.
@@ -52,11 +53,11 @@ The HUD controls include:
 - **Background**
 - **Background Opacity**
 
-HUD placement is controlled from the preview pane. Drag the example HUD to any point inside the previewed screen. Position is stored as normalized X/Y coordinates so it remains valid across resolutions and HUD scales.
+HUD placement is controlled from the preview pane. Drag the example HUD to any point inside the previewed screen. Position is stored as normalized X/Y coordinates across the HUD's usable travel area, so `0/0` represents the top-left and `1/1` represents the bottom-right while keeping the HUD fully on-screen.
 
-The preview expands to use almost the entire available preview pane instead of the older centered square. It selects the closest supplied reference aspect ratio for the current display. Two side-by-side **Day** and **Night** buttons switch the cockpit lighting reference, and the selected button is shown in its toggled state.
+The preview expands to use almost the entire available preview pane and preserves the current viewport aspect ratio. It selects the closest supplied reference image for the current display. Two side-by-side **Day** and **Night** buttons switch the cockpit lighting reference, and the selected button is shown in its toggled state.
 
-The draggable sample uses a **Pitch Forward** example and is rendered using the same player-facing Pitch label, HUD proportions, background color, Background toggle, Background Opacity, and HUD scale used by the real overlay. When the active configuration exposes the Helicopter Cyclic Forward binding, the preview uses that binding's actual axis direction; otherwise it falls back to a normal `Pitch -` example.
+The draggable sample uses a **Pitch Forward** example and is rendered using the same player-facing Pitch label, HUD proportions, background color, Background toggle, Background Opacity, and HUD scale used by the real overlay. When the active configuration exposes the Helicopter Cyclic Forward binding, the preview uses that binding's actual axis direction; otherwise it falls back to `Pitch -`.
 
 ### Axis Labels
 
@@ -143,7 +144,22 @@ The script registers listeners for supported Reforger actions. When an action fi
 4. Converts the resolved binding into a readable label.
 5. Displays the readable input and action in the HUD.
 
-The mod is client-side and does not change gameplay state or alter the physical joystick binding simply to display a custom name.
+The mod is client-side presentation/diagnostic code and does not alter the physical joystick binding simply to display a custom name.
+
+## Installation
+
+### Workshop
+
+After the first public release, install the mod from the Arma Reforger Workshop and enable it in the normal mod manager before launching a session.
+
+### Development / Workbench
+
+1. Install **Arma Reforger Tools** from Steam.
+2. Clone or pull this repository into the `ReforgerHOTASDebugger` addon directory.
+3. Open `addon.gproj` in Workbench.
+4. Allow Workbench to import/update registered resources when required.
+5. Run **Script Validation** and resolve any Game-script errors.
+6. Launch a test scenario and verify the HOTAS Settings tab and HUD.
 
 ## Project Layout
 
@@ -151,6 +167,7 @@ The mod is client-side and does not change gameplay state or alter the physical 
 Scripts/Game/HOTASDebugger/
   HOTASDebugger.c
   HOTASControllerEnhancements.c
+  HOTASPresentation.c
   HOTASSettingsTab.c
   HOTASSettingsEnhancements.c
 
@@ -164,21 +181,16 @@ UI/layouts/Menus/SettingsSubMenus/
   HOTASResetButtons.layout
 
 UI/Textures/HOTASPreview/
-  preview reference images
+  day/night cockpit reference textures
 ```
-
-## Development / Workbench
-
-1. Install **Arma Reforger Tools** from Steam.
-2. Open the `ReforgerHOTASDebugger` addon project in Workbench.
-3. Pull this repository into the addon root.
-4. Allow Workbench to import/update registered resources when required.
-5. Run **Script Validation** and resolve any Game-script errors.
-6. Launch a test scenario and verify the HOTAS Settings tab and HUD.
 
 ## Current Limitation
 
 The engine action callback identifies the action that fired, but an action can have multiple bindings. The mod queries the joystick binding(s) currently assigned to that action and, where the action exposes direction through its value, selects the appropriate directional binding. This is more reliable than assuming a specific physical HOTAS layout, but unusual multi-binding configurations can still be ambiguous.
+
+## Versioning
+
+Release history is tracked in [`CHANGELOG.md`](CHANGELOG.md). The first public release is planned as **1.0.0**.
 
 ## License
 

@@ -24,7 +24,10 @@ class HOTASDebugController
 	protected static const int HOTAS_CONTEXT_FIXED_WING = 3;
 
 	// Normal HUD user settings. Values are loaded from $profile:HOTASHudSettings.txt.
-	protected string m_sHudPosition = "bottom_center";
+	// Normalized top-left travel position. 0 = left/top edge, 1 = right/bottom edge.
+	// The available travel range keeps the HUD fully on-screen at any resolution/scale.
+	protected float m_fHudPositionX = 0.5;
+	protected float m_fHudPositionY = 0.95;
 	protected float m_fHudScale = 1.0;
 	protected int m_iFadeDelayMs = 1800;
 	protected int m_iFadeDurationMs = 350;
@@ -359,54 +362,13 @@ class HOTASDebugController
 
 	protected void GetHudPosition(WorkspaceWidget workspace, int width, int height, out int left, out int top)
 	{
-		int marginX = Math.Round(48 * m_fHudScale);
-		int marginY = Math.Round(54 * m_fHudScale);
 		int screenWidth = workspace.GetWidth();
 		int screenHeight = workspace.GetHeight();
+		int travelX = Math.Max(0, screenWidth - width);
+		int travelY = Math.Max(0, screenHeight - height);
 
-		left = (screenWidth - width) / 2;
-		top = screenHeight - height - marginY;
-
-		if (m_sHudPosition == "top_left")
-		{
-			left = marginX;
-			top = marginY;
-		}
-		else if (m_sHudPosition == "top_center")
-		{
-			left = (screenWidth - width) / 2;
-			top = marginY;
-		}
-		else if (m_sHudPosition == "top_right")
-		{
-			left = screenWidth - width - marginX;
-			top = marginY;
-		}
-		else if (m_sHudPosition == "center_left")
-		{
-			left = marginX;
-			top = (screenHeight - height) / 2;
-		}
-		else if (m_sHudPosition == "center")
-		{
-			left = (screenWidth - width) / 2;
-			top = (screenHeight - height) / 2;
-		}
-		else if (m_sHudPosition == "center_right")
-		{
-			left = screenWidth - width - marginX;
-			top = (screenHeight - height) / 2;
-		}
-		else if (m_sHudPosition == "bottom_left")
-		{
-			left = marginX;
-			top = screenHeight - height - marginY;
-		}
-		else if (m_sHudPosition == "bottom_right")
-		{
-			left = screenWidth - width - marginX;
-			top = screenHeight - height - marginY;
-		}
+		left = Math.Round(travelX * m_fHudPositionX);
+		top = Math.Round(travelY * m_fHudPositionY);
 	}
 
 	protected void LoadHudSettings()
@@ -420,8 +382,9 @@ class HOTASDebugController
 				defaults.WriteLine("# HOTAS Input HUD settings");
 				defaults.WriteLine("hud_enabled=1");
 				defaults.WriteLine("debug_mode=0");
-				defaults.WriteLine("# position: top_left, top_center, top_right, center_left, center, center_right, bottom_left, bottom_center, bottom_right");
-				defaults.WriteLine("position=bottom_center");
+				defaults.WriteLine("# Normalized exact HUD placement inside the usable screen area.");
+				defaults.WriteLine("position_x=0.5");
+				defaults.WriteLine("position_y=0.95");
 				defaults.WriteLine("scale=1.0");
 				defaults.WriteLine("fade_delay_ms=1800");
 				defaults.WriteLine("fade_duration_ms=350");
@@ -446,6 +409,9 @@ class HOTASDebugController
 			return;
 
 		string line;
+		string legacyPosition;
+		bool loadedPositionX;
+		bool loadedPositionY;
 		while (file.ReadLine(line) >= 0)
 		{
 			line = line.Trim();
@@ -464,7 +430,17 @@ class HOTASDebugController
 			else if (key == "debug_mode")
 				m_bDebugMode = value.ToInt(0) != 0;
 			else if (key == "position")
-				m_sHudPosition = value;
+				legacyPosition = value;
+			else if (key == "position_x")
+			{
+				m_fHudPositionX = Math.Clamp(value.ToFloat(0.5), 0.0, 1.0);
+				loadedPositionX = true;
+			}
+			else if (key == "position_y")
+			{
+				m_fHudPositionY = Math.Clamp(value.ToFloat(0.95), 0.0, 1.0);
+				loadedPositionY = true;
+			}
 			else if (key == "scale")
 				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.6, 2.0);
 			else if (key == "fade_delay_ms")
@@ -494,8 +470,34 @@ class HOTASDebugController
 		}
 		file.Close();
 
-		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1 scale=%2 fade=%3/%4 background=%5 opacity=%6", m_sHudPosition, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
+		if (!loadedPositionX || !loadedPositionY)
+		{
+			float legacyX;
+			float legacyY;
+			ResolveLegacyHudPosition(legacyPosition, legacyX, legacyY);
+			if (!loadedPositionX)
+				m_fHudPositionX = legacyX;
+			if (!loadedPositionY)
+				m_fHudPositionY = legacyY;
+		}
+
+		Print(string.Format("[HOTAS Debugger] HUD settings: position=%1/%2 scale=%3 fade=%4/%5 background=%6 opacity=%7", m_fHudPositionX, m_fHudPositionY, m_fHudScale, m_iFadeDelayMs, m_iFadeDurationMs, m_bBackgroundEnabled, m_fBackgroundOpacity), LogLevel.NORMAL);
 		Print(string.Format("[HOTAS Debugger] Axis mapping: roll=%1 pitch=%2 throttle=%3 yaw=%4", m_iRollAxis, m_iPitchAxis, m_iThrottleAxis, m_iYawAxis), LogLevel.NORMAL);
+	}
+
+	protected void ResolveLegacyHudPosition(string position, out float x, out float y)
+	{
+		x = 0.5;
+		y = 0.95;
+
+		if (position == "top_left") { x = 0.05; y = 0.05; }
+		else if (position == "top_center") { x = 0.5; y = 0.05; }
+		else if (position == "top_right") { x = 0.95; y = 0.05; }
+		else if (position == "center_left") { x = 0.05; y = 0.5; }
+		else if (position == "center") { x = 0.5; y = 0.5; }
+		else if (position == "center_right") { x = 0.95; y = 0.5; }
+		else if (position == "bottom_left") { x = 0.05; y = 0.95; }
+		else if (position == "bottom_right") { x = 0.95; y = 0.95; }
 	}
 
 	protected int BoolToInt(bool value)
@@ -514,7 +516,8 @@ class HOTASDebugController
 		file.WriteLine("# HOTAS Input HUD settings");
 		file.WriteLine(string.Format("hud_enabled=%1", BoolToInt(m_bHudEnabled)));
 		file.WriteLine(string.Format("debug_mode=%1", BoolToInt(m_bDebugMode)));
-		file.WriteLine(string.Format("position=%1", m_sHudPosition));
+		file.WriteLine(string.Format("position_x=%1", m_fHudPositionX));
+		file.WriteLine(string.Format("position_y=%1", m_fHudPositionY));
 		file.WriteLine(string.Format("scale=%1", m_fHudScale));
 		file.WriteLine(string.Format("fade_delay_ms=%1", m_iFadeDelayMs));
 		file.WriteLine(string.Format("fade_duration_ms=%1", m_iFadeDurationMs));
@@ -822,38 +825,45 @@ class HOTASDebugController
 		return "Unknown";
 	}
 
+	void GetHudPositionNormalized(out float x, out float y)
+	{
+		x = m_fHudPositionX;
+		y = m_fHudPositionY;
+	}
+
+	void SetHudPositionNormalized(float x, float y)
+	{
+		m_fHudPositionX = Math.Clamp(x, 0.0, 1.0);
+		m_fHudPositionY = Math.Clamp(y, 0.0, 1.0);
+		SaveHudSettings();
+		if (m_bInitialized)
+			RebuildHud();
+	}
+
+	// Compatibility helpers for the old nine-position selector. The native settings
+	// tab now uses the draggable preview, but keeping these avoids breaking callers.
 	protected int GetHudPositionIndex()
 	{
-		switch (m_sHudPosition)
-		{
-			case "top_left": return 0;
-			case "top_center": return 1;
-			case "top_right": return 2;
-			case "center_left": return 3;
-			case "center": return 4;
-			case "center_right": return 5;
-			case "bottom_left": return 6;
-			case "bottom_center": return 7;
-			case "bottom_right": return 8;
-		}
-		return 7;
+		int column = 1;
+		int row = 1;
+		if (m_fHudPositionX < 0.33) column = 0;
+		else if (m_fHudPositionX > 0.66) column = 2;
+		if (m_fHudPositionY < 0.33) row = 0;
+		else if (m_fHudPositionY > 0.66) row = 2;
+		return row * 3 + column;
 	}
 
 	protected void SetHudPositionIndex(int index)
 	{
 		index = Math.ClampInt(index, 0, 8);
-		switch (index)
-		{
-			case 0: m_sHudPosition = "top_left"; break;
-			case 1: m_sHudPosition = "top_center"; break;
-			case 2: m_sHudPosition = "top_right"; break;
-			case 3: m_sHudPosition = "center_left"; break;
-			case 4: m_sHudPosition = "center"; break;
-			case 5: m_sHudPosition = "center_right"; break;
-			case 6: m_sHudPosition = "bottom_left"; break;
-			case 7: m_sHudPosition = "bottom_center"; break;
-			case 8: m_sHudPosition = "bottom_right"; break;
-		}
+		int column = index % 3;
+		int row = index / 3;
+		if (column == 0) m_fHudPositionX = 0.05;
+		else if (column == 1) m_fHudPositionX = 0.5;
+		else m_fHudPositionX = 0.95;
+		if (row == 0) m_fHudPositionY = 0.05;
+		else if (row == 1) m_fHudPositionY = 0.5;
+		else m_fHudPositionY = 0.95;
 	}
 
 	int GetSettingOptionCount(int index)

@@ -306,7 +306,7 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
            Color 0.012 0.016 0.021 1
            Size 1024 1024
           }
-          ImageWidgetClass "{8C52D9F7A31B6514}" {
+          ButtonWidgetClass "{8C52D9F7A31B6514}" {
            Name "HUDPositionPreview"
            Slot FrameWidgetSlot "{8C52D9F7A31B6515}" {
             PositionX 120
@@ -315,8 +315,17 @@ HorizontalLayoutWidgetClass "{8C52D9F7A31B6401}" {
             SizeY 16
             Alignment 0 0
            }
-           Color 0.7605 0.3865 0.0802 1
-           Size 1024 1024
+           {
+            ImageWidgetClass "{8C52D9F7A31B6516}" {
+             Name "HUDPositionPreviewFill"
+             Slot ButtonWidgetSlot "{8C52D9F7A31B6517}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+             Color 0.7605 0.3865 0.0802 1
+             Size 1024 1024
+            }
+           }
           }
          }
         }

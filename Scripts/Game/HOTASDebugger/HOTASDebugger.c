@@ -1401,28 +1401,38 @@ class HOTASDebugController
 
 				int rawAxis = axisText.ToInt();
 				string normalizedBinding = NormalizeAxisBinding(binding);
-				string axisName = GetFreelookLabelForAction(actionName);
-				if (!axisName.IsEmpty())
-				{
-					readable = axisName;
-				}
-				else if (!m_sRollAxisBinding.IsEmpty() && normalizedBinding == m_sRollAxisBinding)
-					axisName = m_sRollAxisLabel;
-				else if (!m_sPitchAxisBinding.IsEmpty() && normalizedBinding == m_sPitchAxisBinding)
-					axisName = m_sPitchAxisLabel;
-				else if (!m_sThrottleAxisBinding.IsEmpty() && normalizedBinding == m_sThrottleAxisBinding)
-					axisName = m_sThrottleAxisLabel;
-				else if (!m_sYawAxisBinding.IsEmpty() && normalizedBinding == m_sYawAxisBinding)
-					axisName = m_sYawAxisLabel;
+				string freelookLabel = GetFreelookLabelForAction(actionName);
+				bool isFreelookDirection = actionName == "FreelookUp"
+					|| actionName == "FreelookDown"
+					|| actionName == "FreelookRight"
+					|| actionName == "FreelookLeft";
 
-				if (!GetFreelookLabelForAction(actionName).IsEmpty())
+				if (isFreelookDirection)
 				{
-					// Direction is already part of the user's text (for example "Thumbstick Up").
+					// Free Look is direction-specific. A custom value such as "Thumbstick Up"
+					// replaces the raw axis text; an empty value deliberately keeps AXIS N+/-.
+					if (!freelookLabel.IsEmpty())
+						readable = freelookLabel;
+					else
+						readable = string.Format("AXIS %1%2", rawAxis + 1, direction);
 				}
-				else if (!axisName.IsEmpty())
-					readable = string.Format("%1 %2", axisName, direction);
 				else
-					readable = string.Format("AXIS %1%2", rawAxis + 1, direction);
+				{
+					string axisName;
+					if (!m_sRollAxisBinding.IsEmpty() && normalizedBinding == m_sRollAxisBinding)
+						axisName = m_sRollAxisLabel;
+					else if (!m_sPitchAxisBinding.IsEmpty() && normalizedBinding == m_sPitchAxisBinding)
+						axisName = m_sPitchAxisLabel;
+					else if (!m_sThrottleAxisBinding.IsEmpty() && normalizedBinding == m_sThrottleAxisBinding)
+						axisName = m_sThrottleAxisLabel;
+					else if (!m_sYawAxisBinding.IsEmpty() && normalizedBinding == m_sYawAxisBinding)
+						axisName = m_sYawAxisLabel;
+
+					if (!axisName.IsEmpty())
+						readable = string.Format("%1 %2", axisName, direction);
+					else
+						readable = string.Format("AXIS %1%2", rawAxis + 1, direction);
+				}
 			}
 
 			if (!result.IsEmpty())

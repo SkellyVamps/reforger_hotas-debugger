@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------------------------
 // UI polish and interaction fixes for the test-branch HOTAS binding editor.
-// Keeps the import picker as a real drop-down and makes capture cancellation explicit/reliable.
+// Keeps the import picker as a real drop-down, removes obsolete right-side binding buttons,
+// provides wrapped status text, and makes capture cancellation explicit/reliable.
 class HOTASCaptureCancelClickHandler : ScriptedWidgetEventHandler
 {
 	protected HOTASBindingsSubMenu m_Owner;
@@ -25,6 +26,8 @@ class HOTASCaptureCancelClickHandler : ScriptedWidgetEventHandler
 modded class HOTASBindingsSubMenu
 {
 	protected SCR_ComboBoxComponent m_ImportDropdown;
+	protected RichTextWidget m_EditorStatusText;
+	protected RichTextWidget m_ManagedStatusText;
 	protected ref HOTASCaptureCancelClickHandler m_CancelClickHandler;
 	protected bool m_bPolishInitialized;
 
@@ -41,12 +44,48 @@ modded class HOTASBindingsSubMenu
 		super.OnTabShow();
 		SetupPolishedBindingControls();
 		RefreshImportSelector();
+		RefreshManagedStatus();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override protected void ResolveWidgets()
+	{
+		// The native-style page no longer has the old action spinbox or right-side Bind/Clear buttons.
+		// Resolve only widgets that still exist so the settings log stays clean.
+		m_ImportSelector = null;
+		m_ActionSelector = null;
+		m_ManagedStatusLabel = null;
+		m_CurrentBindingLabel = null;
+		m_EditorStatusLabel = null;
+
+		m_ImportButton = SCR_ButtonTextComponent.GetButtonText("ImportSelected", m_wRoot);
+		m_ActivateButton = SCR_ButtonTextComponent.GetButtonText("ActivateManaged", m_wRoot);
+		m_ResetButton = SCR_ButtonTextComponent.GetButtonText("ResetManaged", m_wRoot);
+		m_BindButton = null;
+		m_ClearButton = null;
+		m_CancelCaptureButton = SCR_ButtonTextComponent.GetButtonText("CancelCapture", m_wRoot);
+
+		if (m_ImportButton)
+			m_ImportButton.m_OnClicked.Insert(OnImportSelected);
+		if (m_ActivateButton)
+			m_ActivateButton.m_OnClicked.Insert(OnActivateManaged);
+		if (m_ResetButton)
+			m_ResetButton.m_OnClicked.Insert(OnResetManaged);
+		if (m_CancelCaptureButton)
+			m_CancelCaptureButton.m_OnClicked.Insert(OnCancelCapture);
+
+		SetCaptureControls(false);
 	}
 
 	//------------------------------------------------------------------------------------------------
 	protected void SetupPolishedBindingControls()
 	{
 		m_ImportDropdown = SCR_ComboBoxComponent.GetComboBoxComponent("ImportConfig", m_wRoot);
+		if (m_ImportDropdown)
+			m_ImportDropdown.UseLabel(false);
+
+		m_EditorStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("EditorStatusText"));
+		m_ManagedStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("ManagedConfigStatusText"));
 
 		if (!m_bPolishInitialized)
 		{
@@ -67,12 +106,55 @@ modded class HOTASBindingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
+	override protected void SetEditorStatus(string text)
+	{
+		if (!m_EditorStatusText && m_wRoot)
+			m_EditorStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("EditorStatusText"));
+
+		if (m_EditorStatusText)
+			m_EditorStatusText.SetText(text);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override protected void RefreshManagedStatus()
+	{
+		if (!m_ManagedStatusText && m_wRoot)
+			m_ManagedStatusText = RichTextWidget.Cast(m_wRoot.FindAnyWidget("ManagedConfigStatusText"));
+
+		if (!m_ManagedStatusText)
+			return;
+
+		string statusText = "AVAILABLE";
+		SCR_SettingsManagerKeybindModule keybindModule = GetKeybindModule();
+		if (keybindModule)
+		{
+			InputBinding binding = keybindModule.GetInputBindings();
+			if (binding)
+			{
+				array<ResourceName> activeConfigs = {};
+				binding.GetCustomConfigs(activeConfigs);
+				foreach (ResourceName activeConfig : activeConfigs)
+				{
+					if (activeConfig == MANAGED_CONFIG_PATH)
+					{
+						statusText = "ACTIVE";
+						break;
+					}
+				}
+			}
+		}
+
+		m_ManagedStatusText.SetText(string.Format("HOTAS_Config.conf (%1)", statusText));
+	}
+
+	//------------------------------------------------------------------------------------------------
 	override protected void RefreshImportSelector()
 	{
 		m_ImportDropdown = SCR_ComboBoxComponent.GetComboBoxComponent("ImportConfig", m_wRoot);
 		if (!m_ImportDropdown)
 			return;
 
+		m_ImportDropdown.UseLabel(false);
 		m_ImportDropdown.ClearAll();
 		m_ImportConfigs.Clear();
 		m_ImportDropdown.AddItem("Select read-only config...");
@@ -132,6 +214,7 @@ modded class HOTASBindingsSubMenu
 		WriteManagedConfig();
 		ActivateManagedConfig();
 		RefreshCurrentBinding();
+		RefreshManagedStatus();
 		SetEditorStatus(string.Format("Imported %1 supported bindings from %2. Source file was not modified.", importedCount, FilePath.StripPath(sourcePath)));
 	}
 
@@ -140,10 +223,6 @@ modded class HOTASBindingsSubMenu
 	{
 		m_bCapturing = capturing;
 
-		if (m_BindButton)
-			m_BindButton.GetRootWidget().SetEnabled(!capturing);
-		if (m_ClearButton)
-			m_ClearButton.GetRootWidget().SetEnabled(!capturing);
 		if (m_ImportButton)
 			m_ImportButton.GetRootWidget().SetEnabled(!capturing);
 		if (m_ResetButton)
@@ -157,12 +236,9 @@ modded class HOTASBindingsSubMenu
 		if (m_CancelCaptureButton)
 		{
 			Widget cancelRoot = m_CancelCaptureButton.GetRootWidget();
-			cancelRoot.SetVisible(true);
+			cancelRoot.SetVisible(capturing);
 			cancelRoot.SetEnabled(capturing);
-			if (capturing)
-				cancelRoot.SetOpacity(1.0);
-			else
-				cancelRoot.SetOpacity(0.35);
+			cancelRoot.SetOpacity(1.0);
 		}
 
 		InputManager inputManager = GetGame().GetInputManager();
@@ -205,6 +281,8 @@ modded class HOTASBindingsSubMenu
 			return;
 
 		StopCapture(true);
+		RefreshCurrentBinding();
 		SetEditorStatus("Input capture canceled.");
+		Print("[HOTAS Bindings] Input capture canceled.");
 	}
 }

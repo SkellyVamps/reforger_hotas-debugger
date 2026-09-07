@@ -2,6 +2,10 @@
 // Controller-side helpers used by the native HOTAS settings page.
 modded class HOTASDebugController
 {
+	protected int m_iLiveInputRevision;
+	protected string m_sLiveInputReadable = "Waiting for HOTAS input...";
+	protected string m_sLiveInputRaw = "Press or move a bound HOTAS control while in a supported vehicle.";
+
 	//------------------------------------------------------------------------------------------------
 	void ResetHudPresentationSettings()
 	{
@@ -33,6 +37,62 @@ modded class HOTASDebugController
 		m_sFreelookLeftLabel = string.Empty;
 
 		SaveHudSettings();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Capture the same readable binding/action pair used by the HUD before the base handler
+	// checks whether the HUD itself is enabled. This keeps the tester useful with HUD Enabled = Off.
+	override protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
+	{
+		CaptureLiveInput(value, actionName);
+		super.OnActionTriggered(value, reason, actionName);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void CaptureLiveInput(float value, string actionName)
+	{
+		if (actionName.IsEmpty())
+			return;
+
+		int hotasContext = GetPlayerHotasContext();
+		if (hotasContext == HOTAS_CONTEXT_NONE)
+			return;
+		if (!IsActionAllowedForContext(actionName, hotasContext))
+			return;
+
+		bool directionalValueAction = UsesDirectionalValueListener(actionName);
+		if (directionalValueAction && value > -0.001 && value < 0.001)
+			return;
+
+		string bindingsText = GetJoystickBindings(actionName);
+		if (bindingsText == "Non-Joystick Input" || bindingsText == "InputManager unavailable")
+			return;
+
+		string readableAction = MakeReadableActionName(actionName);
+		if (directionalValueAction)
+		{
+			bindingsText = GetDirectionalBindingForValue(bindingsText, value);
+			readableAction = GetDirectionalActionName(actionName, value);
+		}
+
+		m_sLiveInputReadable = string.Format("%1  |  %2", MakeReadableBinding(bindingsText, actionName), readableAction);
+		m_sLiveInputRaw = string.Format("%1  |  %2  |  value=%3", bindingsText, actionName, value.ToString(2));
+		m_iLiveInputRevision++;
+	}
+
+	int GetLiveInputRevision()
+	{
+		return m_iLiveInputRevision;
+	}
+
+	string GetLiveInputReadable()
+	{
+		return m_sLiveInputReadable;
+	}
+
+	string GetLiveInputRaw()
+	{
+		return m_sLiveInputRaw;
 	}
 
 	// Preview-facing accessors. Keeping these here avoids duplicating controller state in UI code.

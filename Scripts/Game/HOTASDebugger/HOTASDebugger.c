@@ -393,7 +393,7 @@ class HOTASDebugController
 				loadedPositionY = true;
 			}
 			else if (key == "scale")
-				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.5, 2.0);
+				m_fHudScale = Math.Clamp(value.ToFloat(1.0), 0.6, 2.0);
 			else if (key == "fade_delay_ms")
 				m_iFadeDelayMs = Math.ClampInt(value.ToInt(1800), 0, 10000);
 			else if (key == "fade_duration_ms")
@@ -495,6 +495,36 @@ class HOTASDebugController
 			RebuildHud();
 	}
 
+	// Slider values are presented as 0..100%. Scale maps 0% -> 0.6x and
+	// 100% -> 2.0x. Background opacity maps directly to 0..1 internally.
+	float GetHudScalePercent()
+	{
+		return Math.Clamp(((m_fHudScale - 0.6) / 1.4) * 100.0, 0.0, 100.0);
+	}
+
+	void SetHudScalePercent(float percent)
+	{
+		percent = Math.Clamp(percent, 0.0, 100.0);
+		m_fHudScale = 0.6 + (percent / 100.0) * 1.4;
+		SaveHudSettings();
+		if (m_bInitialized)
+			RebuildHud();
+	}
+
+	float GetBackgroundOpacityPercent()
+	{
+		return Math.Clamp(m_fBackgroundOpacity * 100.0, 0.0, 100.0);
+	}
+
+	void SetBackgroundOpacityPercent(float percent)
+	{
+		percent = Math.Clamp(percent, 0.0, 100.0);
+		m_fBackgroundOpacity = percent / 100.0;
+		SaveHudSettings();
+		if (m_bInitialized)
+			RebuildHud();
+	}
+
 	int GetSettingsCount()
 	{
 		return 11;
@@ -524,7 +554,7 @@ class HOTASDebugController
 		switch (index)
 		{
 			case 0: return 2;
-			case 1: return 16;
+			case 1: return 15;
 			case 2: return 101;
 			case 3: return 101;
 			case 4: return 2;
@@ -545,7 +575,7 @@ class HOTASDebugController
 			case 0:
 				if (m_bHudEnabled) return 1;
 				return 0;
-			case 1: return Math.ClampInt(Math.Round((m_fHudScale - 0.5) * 10.0), 0, 15);
+			case 1: return Math.ClampInt(Math.Round((m_fHudScale - 0.6) * 10.0), 0, 14);
 			case 2: return Math.ClampInt(Math.Round(m_iFadeDelayMs / 100.0), 0, 100);
 			case 3: return Math.ClampInt(Math.Round(m_iFadeDurationMs / 50.0), 0, 100);
 			case 4:
@@ -573,7 +603,7 @@ class HOTASDebugController
 			case 10:
 				if (optionIndex > 0) return "On";
 				return "Off";
-			case 1: return string.Format("%1x", (0.5 + optionIndex * 0.1).ToString(1));
+			case 1: return string.Format("%1x", (0.6 + optionIndex * 0.1).ToString(1));
 			case 2: return string.Format("%1 ms", optionIndex * 100);
 			case 3: return string.Format("%1 ms", optionIndex * 50);
 			case 5: return string.Format("%1%", optionIndex * 5);
@@ -597,7 +627,7 @@ class HOTASDebugController
 		switch (index)
 		{
 			case 0: m_bHudEnabled = optionIndex != 0; break;
-			case 1: m_fHudScale = 0.5 + optionIndex * 0.1; break;
+			case 1: m_fHudScale = 0.6 + optionIndex * 0.1; break;
 			case 2: m_iFadeDelayMs = optionIndex * 100; break;
 			case 3: m_iFadeDurationMs = optionIndex * 50; break;
 			case 4: m_bBackgroundEnabled = optionIndex != 0; break;

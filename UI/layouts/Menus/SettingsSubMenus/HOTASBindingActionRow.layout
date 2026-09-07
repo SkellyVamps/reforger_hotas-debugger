@@ -134,6 +134,9 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
              }
              Color 1 1 1 1
              Opacity 0
+             Texture "{5CF471573DD34EDF}UI/Textures/HOTASBindings/check-icon_UI.edds"
+             Image ""
+             Size 128 128
             }
            }
           }
@@ -191,6 +194,9 @@ OverlayWidgetClass "{B45D7E926AF13C81}" {
                 VerticalAlign 3
                }
                Color 1 1 1 1
+               Texture "{F7CBD7CE76D1FC48}UI/Textures/HOTASBindings/trash-can-icon_UI.edds"
+               Image ""
+               Size 128 128
               }
              }
             }

@@ -94,8 +94,12 @@ class HOTASDebugController
 		if (m_InputManager)
 		{
 			foreach (string actionName : m_WatchedActions)
-				m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
-
+			{
+				if (UsesDirectionalValueListener(actionName))
+					m_InputManager.RemoveActionListener(actionName, EActionTrigger.VALUE, OnActionTriggered);
+				else
+					m_InputManager.RemoveActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+			}
 		}
 
 		GetGame().GetCallqueue().Remove(StartFade);
@@ -108,11 +112,23 @@ class HOTASDebugController
 	}
 
 
+	protected bool UsesDirectionalValueListener(string actionName)
+	{
+		return actionName == "SelectAction" || actionName == "HelicopterSightZeroing";
+	}
+
 	protected void RegisterListeners()
 	{
 		foreach (string actionName : m_WatchedActions)
-			m_InputManager.AddActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
-
+		{
+			// These two actions are AnalogRelative. Their second binding emits a negative
+			// value, so a DOWN listener only sees the positive/first direction. VALUE
+			// lets the HUD identify both directions without changing the game binding.
+			if (UsesDirectionalValueListener(actionName))
+				m_InputManager.AddActionListener(actionName, EActionTrigger.VALUE, OnActionTriggered);
+			else
+				m_InputManager.AddActionListener(actionName, EActionTrigger.DOWN, OnActionTriggered);
+		}
 	}
 
 	protected void DestroyHud()
@@ -1051,6 +1067,39 @@ class HOTASDebugController
 		return false;
 	}
 
+	protected string GetDirectionalBindingForValue(string bindingsText, float value)
+	{
+		ref array<string> bindings = {};
+		bindingsText.Split(" / ", bindings, true);
+		if (bindings.Count() <= 1)
+			return bindingsText;
+
+		// The configurator writes previous/up first and next/down second. The second
+		// binding carries Multiplier -1, so its runtime action value is negative.
+		if (value < 0.0)
+			return bindings[1];
+		return bindings[0];
+	}
+
+	protected string GetDirectionalActionName(string actionName, float value)
+	{
+		if (actionName == "SelectAction")
+		{
+			if (value < 0.0)
+				return "Next Action";
+			return "Previous Action";
+		}
+
+		if (actionName == "HelicopterSightZeroing")
+		{
+			if (value < 0.0)
+				return "Sight Zeroing Down";
+			return "Sight Zeroing Up";
+		}
+
+		return MakeReadableActionName(actionName);
+	}
+
 	protected void OnActionTriggered(float value = 0.0, EActionTrigger reason = 0, string actionName = string.Empty)
 	{
 		if (actionName.IsEmpty())
@@ -1065,10 +1114,19 @@ class HOTASDebugController
 		if (!IsActionAllowedForContext(actionName, hotasContext))
 			return;
 
+		bool directionalValueAction = UsesDirectionalValueListener(actionName);
+		if (directionalValueAction && value > -0.001 && value < 0.001)
+			return;
+
 		m_iEventCounter++;
 
 		string bindingsText = GetJoystickBindings(actionName);
 		string readableAction = MakeReadableActionName(actionName);
+		if (directionalValueAction)
+		{
+			bindingsText = GetDirectionalBindingForValue(bindingsText, value);
+			readableAction = GetDirectionalActionName(actionName, value);
+		}
 		if (m_bDebugMode)
 		{
 			string output = string.Format(
@@ -1260,10 +1318,10 @@ class HOTASDebugController
 			case "GadgetMap": return "Map";
 			case "Freelook": return "Freelook";
 			case "FreelookReset": return "Center View";
-			case "FreelookUp": return "Look Up";
-			case "FreelookDown": return "Look Down";
-			case "FreelookLeft": return "Look Left";
-			case "FreelookRight": return "Look Right";
+			case "FreelookUp": return "Free Look Up";
+			case "FreelookDown": return "Free Look Down";
+			case "FreelookLeft": return "Free Look Left";
+			case "FreelookRight": return "Free Look Right";
 			case "FocusToggle": return "Focus";
 			case "VONChannel": return "Voice Channel";
 			case "VONDirectToggle": return "Direct Voice";

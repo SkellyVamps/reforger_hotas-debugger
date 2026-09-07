@@ -1,7 +1,7 @@
 GameProject {
  ID "ReforgerHOTASDebugger"
  GUID "6A4B7302D4BACD65"
- TITLE "ReforgerHOTASDebugger"
+ TITLE "Reforger HOTAS Debugger"
  Dependencies {
   "58D0FB3206B6F859"
  }

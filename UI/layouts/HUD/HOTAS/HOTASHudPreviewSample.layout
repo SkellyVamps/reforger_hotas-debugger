@@ -1,0 +1,60 @@
+OverlayWidgetClass "{9B1D7A2E4C6F8031}" {
+ Name "HUDPreviewVisual"
+ {
+  ImageWidgetClass "{9B1D7A2E4C6F8032}" {
+   Name "PreviewHudBackground"
+   Slot OverlayWidgetSlot "{9B1D7A2E4C6F8033}" {
+    HorizontalAlign 3
+    VerticalAlign 3
+   }
+   Color 0.0052 0.007 0.0091 1
+   Size 1024 1024
+  }
+  HorizontalLayoutWidgetClass "{9B1D7A2E4C6F8034}" {
+   Name "PreviewHudContent"
+   Slot OverlayWidgetSlot "{9B1D7A2E4C6F8035}" {
+    HorizontalAlign 3
+    VerticalAlign 3
+    Padding 4 2 4 2
+   }
+   "Fill Origin" Center
+   {
+    RichTextWidgetClass "{9B1D7A2E4C6F8036}" {
+     Name "PreviewHudInput"
+     Slot LayoutSlot "{9B1D7A2E4C6F8037}" {
+     }
+     Color 0.7605 0.3865 0.0802 1
+     Text "Roll +"
+     "Font Size" 10
+     "Vertical Alignment" Center
+     FontProperties FontProperties "{9B1D7A2E4C6F8038}" {
+      Bold 1
+     }
+    }
+    RichTextWidgetClass "{9B1D7A2E4C6F8039}" {
+     Name "PreviewHudSeparator"
+     Slot LayoutSlot "{9B1D7A2E4C6F803A}" {
+      Padding 2 0 2 0
+     }
+     Color 1 1 1 1
+     Text "|"
+     "Font Size" 10
+     "Vertical Alignment" Center
+     FontProperties FontProperties "{9B1D7A2E4C6F803B}" {
+      Bold 1
+     }
+    }
+    RichTextWidgetClass "{9B1D7A2E4C6F803C}" {
+     Name "PreviewHudAction"
+     Slot LayoutSlot "{9B1D7A2E4C6F803D}" {
+      SizeMode Fill
+     }
+     Color 1 1 1 1
+     Text "Cyclic Right"
+     "Font Size" 10
+     "Vertical Alignment" Center
+    }
+   }
+  }
+ }
+}

@@ -2,9 +2,9 @@
 // Native-style presentation layer for the managed HOTAS binding editor.
 //
 // The stock Reforger controls menu is used as the visual/interaction reference: category selector
-// at the top, a scrollable action list on the left, and details/actions on the right. The stock
-// SCR_KeybindRowComponent is intentionally not used because it writes normal player keybinds;
-// this page must continue writing only the mod-owned HOTAS_Config.conf.
+// at the top, a scrollable action list on the left, and compact details/config tools on the right.
+// The stock SCR_KeybindRowComponent is intentionally not used because it writes normal player
+// keybinds; this page must continue writing only the mod-owned HOTAS_Config.conf.
 class HOTASBindingRowHandler : ScriptedWidgetEventHandler
 {
 	protected HOTASBindingsSubMenu m_Owner;
@@ -36,6 +36,52 @@ class HOTASBindingRowHandler : ScriptedWidgetEventHandler
 }
 
 //------------------------------------------------------------------------------------------------
+class HOTASBindingCaptureRowHandler : ScriptedWidgetEventHandler
+{
+	protected HOTASBindingsSubMenu m_Owner;
+	protected int m_iDefinitionIndex;
+
+	void HOTASBindingCaptureRowHandler(HOTASBindingsSubMenu owner, int definitionIndex)
+	{
+		m_Owner = owner;
+		m_iDefinitionIndex = definitionIndex;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override bool OnClick(Widget w, int x, int y, int button)
+	{
+		if (button != 0 || !m_Owner)
+			return false;
+
+		m_Owner.BeginBindingCaptureFromRow(m_iDefinitionIndex);
+		return true;
+	}
+}
+
+//------------------------------------------------------------------------------------------------
+class HOTASBindingClearRowHandler : ScriptedWidgetEventHandler
+{
+	protected HOTASBindingsSubMenu m_Owner;
+	protected int m_iDefinitionIndex;
+
+	void HOTASBindingClearRowHandler(HOTASBindingsSubMenu owner, int definitionIndex)
+	{
+		m_Owner = owner;
+		m_iDefinitionIndex = definitionIndex;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override bool OnClick(Widget w, int x, int y, int button)
+	{
+		if (button != 0 || !m_Owner)
+			return false;
+
+		m_Owner.ClearBindingFromRow(m_iDefinitionIndex);
+		return true;
+	}
+}
+
+//------------------------------------------------------------------------------------------------
 modded class HOTASBindingsSubMenu
 {
 	protected static const string HOTAS_ACTION_ROW_LAYOUT = "{B45D7E926AF13C80}UI/layouts/Menus/SettingsSubMenus/HOTASBindingActionRow.layout";
@@ -50,6 +96,8 @@ modded class HOTASBindingsSubMenu
 	protected ref array<Widget> m_ActionRowWidgets = {};
 	protected ref array<int> m_ActionRowDefinitionIndices = {};
 	protected ref array<ref HOTASBindingRowHandler> m_ActionRowHandlers = {};
+	protected ref array<ref HOTASBindingCaptureRowHandler> m_BindingCaptureHandlers = {};
+	protected ref array<ref HOTASBindingClearRowHandler> m_BindingClearHandlers = {};
 
 	//------------------------------------------------------------------------------------------------
 	override void OnTabCreate(Widget menuRoot, ResourceName buttonsLayout, int index)
@@ -70,7 +118,6 @@ modded class HOTASBindingsSubMenu
 			ListActionsForCurrentCategory();
 			RefreshCurrentBinding();
 			KeepSpinBoxArrowsVisible(m_CategorySelector);
-			KeepSpinBoxArrowsVisible(m_ImportSelector);
 		}
 	}
 
@@ -78,7 +125,6 @@ modded class HOTASBindingsSubMenu
 	override protected void RefreshImportSelector()
 	{
 		super.RefreshImportSelector();
-		KeepSpinBoxArrowsVisible(m_ImportSelector);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -105,12 +151,11 @@ modded class HOTASBindingsSubMenu
 		BuildCategorySelector();
 		ListActionsForCurrentCategory();
 		KeepSpinBoxArrowsVisible(m_CategorySelector);
-		KeepSpinBoxArrowsVisible(m_ImportSelector);
 
 		if (m_CategorySelector)
 			m_CategorySelector.m_OnChanged.Insert(OnHotasCategoryChanged);
 
-		SetEditorStatus("Select an action row, then choose Bind Input or Clear Binding.");
+		SetEditorStatus("Click a binding box to assign a joystick/HOTAS input.");
 		RefreshCurrentBinding();
 	}
 
@@ -139,6 +184,9 @@ modded class HOTASBindingsSubMenu
 	//------------------------------------------------------------------------------------------------
 	protected void OnHotasCategoryChanged(SCR_SpinBoxComponent component, int index)
 	{
+		if (m_bCapturing)
+			StopCapture(true);
+
 		ListActionsForCurrentCategory();
 		KeepSpinBoxArrowsVisible(m_CategorySelector);
 	}
@@ -158,6 +206,8 @@ modded class HOTASBindingsSubMenu
 		m_ActionRowWidgets.Clear();
 		m_ActionRowDefinitionIndices.Clear();
 		m_ActionRowHandlers.Clear();
+		m_BindingCaptureHandlers.Clear();
+		m_BindingClearHandlers.Clear();
 
 		int categoryIndex = m_CategorySelector.GetCurrentIndex();
 		if (!m_CategoryNames.IsIndexValid(categoryIndex))
@@ -185,9 +235,21 @@ modded class HOTASBindingsSubMenu
 			HOTASBindingRowHandler rowHandler = new HOTASBindingRowHandler(this, i);
 			row.AddHandler(rowHandler);
 
+			Widget bindingButton = row.FindAnyWidget("BindingButton");
+			HOTASBindingCaptureRowHandler captureHandler = new HOTASBindingCaptureRowHandler(this, i);
+			if (bindingButton)
+				bindingButton.AddHandler(captureHandler);
+
+			Widget clearButton = row.FindAnyWidget("ClearBindingButton");
+			HOTASBindingClearRowHandler clearHandler = new HOTASBindingClearRowHandler(this, i);
+			if (clearButton)
+				clearButton.AddHandler(clearHandler);
+
 			m_ActionRowWidgets.Insert(row);
 			m_ActionRowDefinitionIndices.Insert(i);
 			m_ActionRowHandlers.Insert(rowHandler);
+			m_BindingCaptureHandlers.Insert(captureHandler);
+			m_BindingClearHandlers.Insert(clearHandler);
 		}
 
 		if (!m_ActionRowDefinitionIndices.IsEmpty())
@@ -204,6 +266,9 @@ modded class HOTASBindingsSubMenu
 	//------------------------------------------------------------------------------------------------
 	string GetBindingDisplayText(int definitionIndex)
 	{
+		if (m_bCapturing && definitionIndex == m_iSelectedAction)
+			return "Listening...";
+
 		if (!m_Bindings.IsIndexValid(definitionIndex))
 			return "Unassigned";
 
@@ -225,6 +290,37 @@ modded class HOTASBindingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
+	void BeginBindingCaptureFromRow(int definitionIndex)
+	{
+		if (!m_Definitions.IsIndexValid(definitionIndex))
+			return;
+
+		if (m_bCapturing)
+			StopCapture(true);
+
+		m_iSelectedAction = definitionIndex;
+		RefreshCurrentBinding();
+		OnBindInput();
+		RefreshActionRowBindingText();
+		RefreshActionRowSelection();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	void ClearBindingFromRow(int definitionIndex)
+	{
+		if (!m_Definitions.IsIndexValid(definitionIndex))
+			return;
+
+		if (m_bCapturing)
+			StopCapture(true);
+
+		m_iSelectedAction = definitionIndex;
+		OnClearBinding();
+		RefreshActionRowBindingText();
+		RefreshActionRowSelection();
+	}
+
+	//------------------------------------------------------------------------------------------------
 	protected void RefreshActionRowBindingText()
 	{
 		for (int i = 0; i < m_ActionRowWidgets.Count(); i++)
@@ -239,6 +335,18 @@ modded class HOTASBindingsSubMenu
 			TextWidget bindingValue = TextWidget.Cast(row.FindAnyWidget("BindingValue"));
 			if (bindingValue)
 				bindingValue.SetText(GetBindingDisplayText(m_ActionRowDefinitionIndices[i]));
+
+			Widget clearButton = row.FindAnyWidget("ClearBindingButton");
+			if (clearButton)
+			{
+				int definitionIndex = m_ActionRowDefinitionIndices[i];
+				bool hasBinding = m_Bindings.IsIndexValid(definitionIndex) && !m_Bindings[definitionIndex].IsEmpty();
+				clearButton.SetEnabled(hasBinding && !m_bCapturing);
+				if (hasBinding)
+					clearButton.SetOpacity(1.0);
+				else
+					clearButton.SetOpacity(0.28);
+			}
 		}
 	}
 
@@ -278,7 +386,6 @@ modded class HOTASBindingsSubMenu
 		}
 
 		HOTASBindingDefinition definition = m_Definitions[m_iSelectedAction];
-		string bindingText = GetBindingDisplayText(m_iSelectedAction);
 		string inputType = GetDefinitionInputType(definition);
 
 		if (m_DescriptionHeader)
@@ -286,18 +393,12 @@ modded class HOTASBindingsSubMenu
 
 		if (m_DescriptionText)
 		{
-			string descriptionText = string.Format(
-				"Category: %1\nGame action: %2\nInput type: %3\nManaged binding: %4\n\nBind Input listens only for joystick/HOTAS input. Changes regenerate HOTAS_Config.conf; other custom .conf files are read-only import sources.",
+			m_DescriptionText.SetText(string.Format(
+				"Category: %1\nGame action: %2\nInput type: %3",
 				definition.m_sCategory,
 				definition.m_sConfigAction,
-				inputType,
-				bindingText
-			);
-
-			if (definition.m_sCategory == "WCS Armament")
-				descriptionText += "\n\nWCS actions are optional and can only be captured when the corresponding WCS actions are available in the currently loaded mod set.";
-
-			m_DescriptionText.SetText(descriptionText);
+				inputType
+			));
 		}
 	}
 

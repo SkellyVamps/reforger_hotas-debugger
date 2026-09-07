@@ -1,7 +1,8 @@
 //------------------------------------------------------------------------------------------------
 // UI polish and interaction fixes for the test-branch HOTAS binding editor.
 // Keeps the import picker as a real drop-down, removes obsolete right-side binding buttons,
-// provides wrapped status text, and makes capture cancellation explicit/reliable.
+// provides wrapped status text, applies the provided row icons, and makes capture cancellation
+// explicit/reliable.
 class HOTASCaptureCancelClickHandler : ScriptedWidgetEventHandler
 {
 	protected HOTASBindingsSubMenu m_Owner;
@@ -25,6 +26,9 @@ class HOTASCaptureCancelClickHandler : ScriptedWidgetEventHandler
 //------------------------------------------------------------------------------------------------
 modded class HOTASBindingsSubMenu
 {
+	protected static const string HOTAS_TRASH_ICON = "{F7CBD7CE76D1FC48}UI/Textures/HOTASBindings/trash-can-icon_UI.edds";
+	protected static const string HOTAS_CONFIRM_ICON = "{5CF471573DD34EDF}UI/Textures/HOTASBindings/check-icon_UI.edds";
+
 	protected SCR_ComboBoxComponent m_ImportDropdown;
 	protected RichTextWidget m_EditorStatusText;
 	protected RichTextWidget m_ManagedStatusText;
@@ -45,6 +49,17 @@ modded class HOTASBindingsSubMenu
 		SetupPolishedBindingControls();
 		RefreshImportSelector();
 		RefreshManagedStatus();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	override protected void RefreshCurrentBinding()
+	{
+		super.RefreshCurrentBinding();
+
+		// NativeUI also updates row text in its RefreshCurrentBinding override. Defer the icon pass so
+		// it always runs after the entire modded-method chain has finished updating those rows.
+		GetGame().GetCallqueue().Remove(RefreshBindingRowIcons);
+		GetGame().GetCallqueue().Call(RefreshBindingRowIcons);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -97,6 +112,97 @@ modded class HOTASBindingsSubMenu
 	}
 
 	//------------------------------------------------------------------------------------------------
+	protected Widget FindBindingRowAncestor(Widget widget)
+	{
+		Widget current = widget;
+		while (current)
+		{
+			if (current.GetName() == "HOTASBindingRow")
+				return current;
+
+			current = current.GetParent();
+		}
+
+		return null;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected bool RowHasAssignedBinding(Widget row)
+	{
+		if (!row)
+			return false;
+
+		TextWidget bindingValue = TextWidget.Cast(row.FindAnyWidget("BindingValue"));
+		if (!bindingValue)
+			return false;
+
+		string text = bindingValue.GetText();
+		if (text.IsEmpty())
+			return false;
+		if (text == "Unassigned")
+			return false;
+		if (text == "Listening...")
+			return false;
+
+		return true;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void RefreshBindingRowIcons()
+	{
+		if (!m_wRoot)
+			return;
+
+		array<ref Widget> children = {};
+		SCR_WidgetHelper.GetAllChildren(m_wRoot, children);
+		foreach (Widget child : children)
+		{
+			if (!child)
+				continue;
+
+			string widgetName = child.GetName();
+			if (widgetName == "TrashIconImage")
+			{
+				ImageWidget trashIcon = ImageWidget.Cast(child);
+				if (!trashIcon)
+					continue;
+
+				trashIcon.LoadImageTexture(0, HOTAS_TRASH_ICON);
+				Widget row = FindBindingRowAncestor(child);
+				bool assigned = RowHasAssignedBinding(row);
+				if (assigned)
+					trashIcon.SetOpacity(1.0);
+				else
+					trashIcon.SetOpacity(0.28);
+
+				Widget clearBackground = null;
+				if (row)
+					clearBackground = row.FindAnyWidget("ClearBackground");
+				if (clearBackground)
+				{
+					if (assigned)
+						clearBackground.SetOpacity(1.0);
+					else
+						clearBackground.SetOpacity(0.28);
+				}
+			}
+			else if (widgetName == "BindingConfirmedIcon")
+			{
+				ImageWidget confirmIcon = ImageWidget.Cast(child);
+				if (!confirmIcon)
+					continue;
+
+				confirmIcon.LoadImageTexture(0, HOTAS_CONFIRM_ICON);
+				Widget row = FindBindingRowAncestor(child);
+				if (RowHasAssignedBinding(row))
+					confirmIcon.SetOpacity(1.0);
+				else
+					confirmIcon.SetOpacity(0.0);
+			}
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
 	protected void SetupPolishedBindingControls()
 	{
 		m_ImportDropdown = SCR_ComboBoxComponent.GetComboBoxComponent("ImportConfig", m_wRoot);
@@ -121,6 +227,8 @@ modded class HOTASBindingsSubMenu
 		}
 
 		SetCaptureControls(m_bCapturing);
+		GetGame().GetCallqueue().Remove(RefreshBindingRowIcons);
+		GetGame().GetCallqueue().Call(RefreshBindingRowIcons);
 	}
 
 	//------------------------------------------------------------------------------------------------

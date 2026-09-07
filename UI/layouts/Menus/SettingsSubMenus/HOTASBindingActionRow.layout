@@ -49,12 +49,14 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
         TextWidgetClass "{B45D7E926AF13C8D}" {
          Name "ActionName"
          Slot LayoutSlot "{B45D7E926AF13C8E}" {
+          VerticalAlign 1
           SizeMode Fill
           FillWeight 1.45
          }
          Text "Action"
          "Font Size" 20
          "Min Font Size" 16
+         "Vertical Alignment" Center
          FontProperties FontProperties "{B45D7E926AF13C8F}" {
           Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
          }
@@ -62,6 +64,7 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
         TextWidgetClass "{B45D7E926AF13C90}" {
          Name "BindingValue"
          Slot LayoutSlot "{B45D7E926AF13C91}" {
+          VerticalAlign 1
           SizeMode Fill
           FillWeight 1
          }
@@ -69,6 +72,7 @@ ButtonWidgetClass "{B45D7E926AF13C81}" {
          Text "Unassigned"
          "Font Size" 18
          "Min Font Size" 14
+         "Vertical Alignment" Center
          Wrap 0
          FontProperties FontProperties "{B45D7E926AF13C92}" {
           Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"

@@ -1,0 +1,33 @@
+VerticalLayoutWidgetClass "{CEFA884F512D1AC1}" {
+ Name "HOTASResetButtons"
+ Slot LayoutSlot "{EED816539F97C2FF}" {
+  Padding 4 12 4 4
+  SizeMode Fill
+ }
+ {
+  ButtonWidgetClass "{D99B57317247D5E3}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+   Name "ResetHudSettings"
+   Slot LayoutSlot "{C865EDE322F1EFF9}" {
+    Padding 0 2 0 2
+    SizeMode Fill
+   }
+   components {
+    SCR_ButtonTextComponent "{D19CE7D7378D6AE8}" {
+     m_sText "Reset HUD Settings"
+    }
+   }
+  }
+  ButtonWidgetClass "{0602F9814AA7E7B0}" : "{75C912A1C89BE6C2}UI/layouts/WidgetLibrary/Buttons/WLib_ButtonText.layout" {
+   Name "ResetLabels"
+   Slot LayoutSlot "{622449D4F172D17D}" {
+    Padding 0 2 0 2
+    SizeMode Fill
+   }
+   components {
+    SCR_ButtonTextComponent "{DE443ABF8B094240}" {
+     m_sText "Reset Labels"
+    }
+   }
+  }
+ }
+}

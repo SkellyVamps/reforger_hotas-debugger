@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{B45D7E926AF13C80}UI/layouts/Menus/SettingsSubMenus/HOTASBindingActionRow.layout"
+ Configurations {
+  LayoutResourceClass PC {
+  }
+  LayoutResourceClass XBOX_ONE : PC {
+  }
+  LayoutResourceClass XBOX_SERIES : PC {
+  }
+  LayoutResourceClass PS4 : PC {
+  }
+  LayoutResourceClass PS5 : PC {
+  }
+  LayoutResourceClass HEADLESS : PC {
+  }
+ }
+}
